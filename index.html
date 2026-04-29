@@ -550,10 +550,15 @@ function newProblem(){
     company_labels:[], location_labels:[], images:[], updated_at:null
   };
   currentSubKey=null;
-  document.querySelectorAll('.problem-item').forEach(el=>el.classList.remove('active'));
+  // Add to local list so it appears in sidebar immediately
+  allProblems.push(currentProblem);
+  document.getElementById('db-info').textContent=`${allProblems.length} problems`;
+  renderList();
+  // Scroll sidebar to the new item
+  const newEl=document.querySelector(`.problem-item[data-id="${newId}"]`);
+  if(newEl)newEl.scrollIntoView({block:'center'});
   renderEditor();
   renderPreview();
-  // Scroll editor to top
   document.getElementById('editor-panel').scrollTop=0;
 }
 

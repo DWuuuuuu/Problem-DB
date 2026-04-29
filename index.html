@@ -598,7 +598,7 @@ function renderEditor(){
 
   <div class="sec">Content</div>
   <div class="fg"><label class="lbl">Problem Text (LaTeX)</label><textarea class="fc" rows="5" oninput="currentProblem.problem_text=this.value;dPrev()">${esc(p.problem_text||'')}</textarea></div>
-  <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="3" oninput="currentProblem.correct_answer=this.value">${esc(p.correct_answer||'')}</textarea></div>
+  <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="3" oninput="currentProblem.correct_answer=this.value;dPrev()">${esc(p.correct_answer||'')}</textarea></div>
 
   <div class="fg"><label class="lbl">Solutions</label>${renderSolutionsList(p.solutions,'updateSolution','addSolution','removeSolution')}</div>
   <div class="fg"><label class="lbl">Hints</label>${renderHintsList(p.hints,'updateHint','addHint','removeHint')}</div>
@@ -645,7 +645,7 @@ function renderSubEditorContent(sk){
   return `<div class="sub-content">
     <div class="sub-del-row"><button class="btn btn-del" onclick="deleteSubproblem('${sk}')">Delete ${sk.toUpperCase()}</button></div>
     <div class="fg"><label class="lbl">Problem Text</label><textarea class="fc" rows="4" oninput="patchSub('${sk}','problem_text',this.value);dPrev()">${esc(s.problem_text||'')}</textarea></div>
-    <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','correct_answer',this.value)">${esc(s.correct_answer||'')}</textarea></div>
+    <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','correct_answer',this.value);dPrev()">${esc(s.correct_answer||'')}</textarea></div>
     <div class="fg"><label class="lbl">Solutions</label>${renderSolutionsList(s.solutions||[],'updateCurSubSolution','addCurSubSolution','removeCurSubSolution')}</div>
     <div class="fg"><label class="lbl">Hints</label>${renderHintsList(s.hints||[],'updateCurSubHint','addCurSubHint','removeCurSubHint')}</div>
     <div class="fg"><label class="lbl">Comment</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','comment',this.value)">${esc(s.comment||'')}</textarea></div>

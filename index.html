@@ -8,145 +8,154 @@
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <script>
 window.MathJax = {
-    tex: {
-        inlineMath: [['\\(','\\)'],['$','$']],
-        displayMath: [['\\[','\\]'],['$$','$$']],
-        processEscapes: true, processEnvironments: true,
-        packages: {'[+]': ['ams']}
-    },
-    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
-    loader: { load: ['[tex]/ams'] }
+  tex: {
+    inlineMath:[['\\(','\\)'],['$','$']],
+    displayMath:[['\\[','\\]'],['$$','$$']],
+    processEscapes:true, processEnvironments:true,
+    packages:{'[+]':['ams']}
+  },
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre']},
+  loader:{load:['[tex]/ams']}
 };
 </script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;min-height:100vh;color:#e0e0e0;}
 
-/* ── Password overlay ── */
+/* Password overlay */
 #pw-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;}
 .pw-box{background:#16213e;border:1px solid #0f3460;border-radius:16px;padding:48px 56px;text-align:center;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
 .pw-box h2{font-size:22px;margin-bottom:8px;color:#e94560;}
 .pw-box p{color:#9aa0b4;margin-bottom:28px;font-size:14px;}
 .pw-box input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid #0f3460;background:#0f3460;color:#fff;font-size:16px;text-align:center;letter-spacing:4px;margin-bottom:16px;}
 .pw-box input:focus{outline:none;border-color:#e94560;}
-.pw-btn{width:100%;padding:12px;border-radius:8px;border:none;background:#e94560;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;}
+.pw-btn{width:100%;padding:12px;border-radius:8px;border:none;background:#e94560;color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
 .pw-btn:hover{background:#c73652;}
 .pw-err{color:#e94560;font-size:13px;margin-top:10px;min-height:20px;}
 
-/* ── Main layout ── */
+/* Layout */
 #app{display:none;height:100vh;flex-direction:column;}
-.topbar{background:#16213e;border-bottom:1px solid #0f3460;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
-.topbar h1{font-size:18px;font-weight:700;color:#e94560;white-space:nowrap;}
-.topbar-info{color:#9aa0b4;font-size:13px;}
-.topbar-right{margin-left:auto;display:flex;gap:10px;align-items:center;}
+.topbar{background:#16213e;border-bottom:1px solid #0f3460;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.topbar h1{font-size:17px;font-weight:700;color:#e94560;white-space:nowrap;}
+.topbar-info{color:#9aa0b4;font-size:12px;}
+.topbar-right{margin-left:auto;display:flex;gap:8px;}
 .main{display:flex;flex:1;overflow:hidden;}
 
-/* ── Sidebar ── */
-.sidebar{width:260px;background:#16213e;border-right:1px solid #0f3460;display:flex;flex-direction:column;flex-shrink:0;}
-.sidebar-head{padding:14px;border-bottom:1px solid #0f3460;}
-.search-box{width:100%;padding:8px 12px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:13px;}
+/* Sidebar */
+.sidebar{width:255px;background:#16213e;border-right:1px solid #0f3460;display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-head{padding:12px;border-bottom:1px solid #0f3460;}
+.search-box{width:100%;padding:7px 11px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:13px;}
 .search-box:focus{outline:none;border-color:#e94560;}
-.filter-row{display:flex;gap:6px;margin-top:8px;}
-.filter-select{flex:1;padding:6px 8px;background:#0f3460;border:1px solid #1a4a8a;border-radius:5px;color:#e0e0e0;font-size:12px;}
-.filter-select:focus{outline:none;}
-.problem-list{flex:1;overflow-y:auto;padding:0;}
-.problem-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:.15s;}
-.problem-item:hover{background:rgba(233,69,96,.1);}
-.problem-item.active{background:rgba(233,69,96,.2);border-left:3px solid #e94560;}
-.p-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.p-meta{font-size:11px;color:#9aa0b4;margin-top:3px;display:flex;gap:6px;}
-.badge{padding:2px 6px;border-radius:10px;font-size:10px;font-weight:600;}
+.filter-row{display:flex;gap:5px;margin-top:7px;}
+.filter-sel{flex:1;padding:5px 7px;background:#0f3460;border:1px solid #1a4a8a;border-radius:5px;color:#e0e0e0;font-size:11px;}
+.filter-sel:focus{outline:none;}
+.problem-list{flex:1;overflow-y:auto;}
+.problem-item{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:.12s;}
+.problem-item:hover{background:rgba(233,69,96,.08);}
+.problem-item.active{background:rgba(233,69,96,.18);border-left:3px solid #e94560;}
+.p-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-meta{font-size:10px;color:#9aa0b4;margin-top:3px;display:flex;gap:5px;align-items:center;}
+.badge{padding:2px 5px;border-radius:10px;font-size:9px;font-weight:700;}
 .badge-easy{background:#1a4a2a;color:#4caf50;}
 .badge-medium{background:#4a3a10;color:#ffc107;}
 .badge-hard{background:#4a1a1a;color:#f44336;}
-.badge-very_hard{background:#2a1a4a;color:#9c27b0;}
+.badge-very_hard{background:#2a1a4a;color:#b39ddb;}
 .badge-null{background:#2a2a3a;color:#666;}
-.badge-included{background:#1a3a4a;color:#17a2b8;}
-.badge-excluded{background:#3a1a1a;color:#888;}
-.sidebar-count{padding:10px 14px;border-top:1px solid #0f3460;font-size:12px;color:#9aa0b4;flex-shrink:0;}
+.badge-in{background:#1a3a4a;color:#17a2b8;}
+.badge-ex{background:#3a1a1a;color:#888;}
+.sidebar-foot{padding:8px 12px;border-top:1px solid #0f3460;font-size:11px;color:#9aa0b4;}
 
-/* ── Editor + Preview ── */
+/* Content area */
 .content{flex:1;display:flex;overflow:hidden;}
-.editor-panel{width:50%;overflow-y:auto;padding:20px;border-right:1px solid #0f3460;}
-.preview-panel{width:50%;overflow-y:auto;padding:20px;background:#0d1117;}
+.editor-panel{width:50%;overflow-y:auto;padding:16px 18px;border-right:1px solid #0f3460;}
+.preview-panel{width:50%;overflow-y:auto;padding:16px 18px;background:#0d1117;}
 
-.section-header{font-size:12px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #0f3460;}
-.section-header:first-child{margin-top:0;}
-.form-group{margin-bottom:16px;}
-.form-label{display:block;font-size:12px;font-weight:600;color:#9aa0b4;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
-.form-control{width:100%;padding:10px 12px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:13px;font-family:inherit;}
-.form-control:focus{outline:none;border-color:#e94560;}
-textarea.form-control{resize:vertical;min-height:80px;font-family:'Courier New',monospace;}
-select.form-control{cursor:pointer;}
-.checkbox-row{display:flex;gap:20px;flex-wrap:wrap;}
-.checkbox-item{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
-.checkbox-item input{cursor:pointer;accent-color:#e94560;}
-
-/* Tag multi-select */
-.tag-container{background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;padding:8px;min-height:42px;display:flex;flex-wrap:wrap;gap:5px;cursor:pointer;}
-.tag-container:focus-within{border-color:#e94560;}
-.tag{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:4px;}
-.tag-quant{background:#1a3a5a;color:#64b5f6;}
-.tag-four{background:#1a4a2a;color:#81c784;}
-.tag-approach{background:#3a2a5a;color:#ce93d8;}
-.tag-reasoning{background:#4a3a1a;color:#ffcc02;}
-.tag-label{background:#3a1a3a;color:#f48fb1;}
-.tag-company{background:#1a3a4a;color:#80deea;}
-.tag-location{background:#2a3a1a;color:#a5d6a7;}
-.tag-remove{cursor:pointer;opacity:.7;font-size:12px;}
-.tag-remove:hover{opacity:1;}
-.tag-input{background:transparent;border:none;color:#e0e0e0;font-size:12px;outline:none;min-width:80px;padding:2px 4px;}
-
-/* Dropdown for tags */
-.tag-dropdown{position:absolute;background:#16213e;border:1px solid #0f3460;border-radius:6px;max-height:200px;overflow-y:auto;z-index:100;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
-.tag-option{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;}
-.tag-option:hover{background:rgba(233,69,96,.15);}
-.tag-option.selected{color:#e94560;}
-.tag-wrapper{position:relative;}
+/* Form */
+.sec{font-size:11px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin:18px 0 8px;padding-bottom:5px;border-bottom:1px solid #0f3460;}
+.sec:first-child{margin-top:0;}
+.fg{margin-bottom:13px;}
+.lbl{display:block;font-size:11px;font-weight:600;color:#9aa0b4;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.fc{width:100%;padding:9px 11px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:13px;font-family:inherit;}
+.fc:focus{outline:none;border-color:#e94560;}
+textarea.fc{resize:vertical;min-height:70px;font-family:'Courier New',monospace;font-size:12px;}
+select.fc{cursor:pointer;}
+.cb-row{display:flex;gap:18px;flex-wrap:wrap;}
+.cb{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;}
+.cb input{cursor:pointer;accent-color:#e94560;}
 
 /* Buttons */
-.btn{padding:8px 18px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:6px;}
-.btn-save{background:#e94560;color:#fff;}
-.btn-save:hover{background:#c73652;}
-.btn-save:disabled{background:#555;cursor:not-allowed;}
+.btn{padding:7px 14px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-red{background:#e94560;color:#fff;}
+.btn-red:hover{background:#c73652;}
+.btn-red:disabled{background:#555;cursor:not-allowed;}
 .btn-ghost{background:rgba(255,255,255,.07);color:#e0e0e0;border:1px solid rgba(255,255,255,.1);}
-.btn-ghost:hover{background:rgba(255,255,255,.12);}
-.btn-danger{background:#c0392b;color:#fff;}
-.btn-danger:hover{background:#a93226;}
-.save-row{display:flex;gap:10px;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid #0f3460;}
-.save-status{font-size:13px;color:#4caf50;}
-.save-error{font-size:13px;color:#e94560;}
+.btn-ghost:hover{background:rgba(255,255,255,.13);}
+.btn-add{background:rgba(78,205,130,.12);color:#4ecd82;border:1px solid rgba(78,205,130,.3);}
+.btn-add:hover{background:rgba(78,205,130,.2);}
+.btn-del{background:rgba(233,69,96,.1);color:#e94560;border:1px solid rgba(233,69,96,.3);}
+.btn-del:hover{background:rgba(233,69,96,.2);}
+.save-row{display:flex;gap:10px;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid #0f3460;}
+.save-ok{font-size:12px;color:#4caf50;}
+.save-err{font-size:12px;color:#e94560;}
 
-/* Preview styles */
-.preview-title{font-size:16px;font-weight:700;color:#e94560;margin-bottom:16px;}
-.preview-section{margin-bottom:20px;}
-.preview-section-label{font-size:11px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
-.preview-content{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px;line-height:1.7;font-size:14px;}
-.preview-content.solution-bg{background:#0a1a2a;border-color:#1a4a8a;}
-.preview-tags{display:flex;flex-wrap:wrap;gap:5px;}
-.preview-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.preview-meta-item{background:#16213e;border:1px solid #0f3460;border-radius:6px;padding:8px 12px;}
-.preview-meta-key{font-size:10px;color:#9aa0b4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
-.preview-meta-val{font-size:13px;color:#e0e0e0;}
+/* Tags */
+.tag-wrap{position:relative;}
+.tag-box{background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;padding:7px;min-height:38px;display:flex;flex-wrap:wrap;gap:4px;cursor:pointer;}
+.tag-box:focus-within{border-color:#e94560;}
+.tag{padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:3px;}
+.tq{background:#1a3a5a;color:#64b5f6;} .tf{background:#1a4a2a;color:#81c784;}
+.ta{background:#3a2a5a;color:#ce93d8;} .tr{background:#4a3a1a;color:#ffd54f;}
+.tl{background:#3a1a3a;color:#f48fb1;} .tc{background:#1a3a4a;color:#80deea;}
+.tlo{background:#2a3a1a;color:#a5d6a7;}
+.trm{cursor:pointer;opacity:.7;font-size:11px;} .trm:hover{opacity:1;}
+.t-inp{background:transparent;border:none;color:#e0e0e0;font-size:11px;outline:none;min-width:60px;padding:1px 3px;}
+.t-dd{position:absolute;top:100%;left:0;right:0;background:#16213e;border:1px solid #0f3460;border-radius:6px;max-height:180px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.t-opt{padding:7px 11px;font-size:12px;cursor:pointer;}
+.t-opt:hover{background:rgba(233,69,96,.15);}
+.t-opt.sel{color:#e94560;}
 
-/* Loading */
-.loading{display:flex;align-items:center;justify-content:center;height:200px;color:#9aa0b4;font-size:14px;}
-.spinner{width:20px;height:20px;border:2px solid #0f3460;border-top-color:#e94560;border-radius:50%;animation:spin .7s linear infinite;margin-right:10px;}
-@keyframes spin{to{transform:rotate(360deg);}}
+/* Hints */
+.hint-list{display:flex;flex-direction:column;gap:6px;}
+.hint-item{display:flex;gap:6px;align-items:flex-start;}
+.hint-item textarea{flex:1;min-height:50px;}
+.hint-num{font-size:11px;color:#9aa0b4;padding-top:10px;white-space:nowrap;}
+
+/* Subproblems */
+.sub-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.sub-tab{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;background:#0f3460;border:1px solid #1a4a8a;color:#9aa0b4;transition:.15s;}
+.sub-tab:hover{border-color:#e94560;color:#e0e0e0;}
+.sub-tab.active{background:rgba(233,69,96,.2);border-color:#e94560;color:#e94560;}
+.sub-tab.add-tab{background:rgba(78,205,130,.1);border-color:rgba(78,205,130,.3);color:#4ecd82;}
+.sub-content{background:#0a0f1e;border:1px solid #1a4a8a;border-radius:8px;padding:14px;}
+.sub-del-row{display:flex;justify-content:flex-end;margin-bottom:8px;}
+
+/* Preview */
+.prev-title{font-size:15px;font-weight:700;color:#e94560;margin-bottom:14px;}
+.prev-sec{margin-bottom:16px;}
+.prev-lbl{font-size:10px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.prev-box{background:#16213e;border:1px solid #0f3460;border-radius:7px;padding:12px;line-height:1.75;font-size:13px;}
+.prev-box.sol{background:#0a1a2a;border-color:#1a4a8a;}
+.prev-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.prev-cell{background:#16213e;border:1px solid #0f3460;border-radius:6px;padding:7px 10px;}
+.prev-k{font-size:9px;color:#9aa0b4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px;}
+.prev-v{font-size:12px;}
+
+/* Sub preview tabs */
+.prev-sub-tabs{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap;}
+.prev-sub-tab{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;background:#0f3460;border:1px solid #1a4a8a;color:#9aa0b4;}
+.prev-sub-tab.active{background:rgba(233,69,96,.2);border-color:#e94560;color:#e94560;}
 
 /* Scrollbars */
-::-webkit-scrollbar{width:5px;}
-::-webkit-scrollbar-track{background:#0f3460;}
-::-webkit-scrollbar-thumb{background:#e94560;border-radius:3px;}
-
-/* Empty state */
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:#9aa0b4;gap:12px;}
-.empty-state svg{opacity:.3;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:#0f3460;} ::-webkit-scrollbar-thumb{background:#e94560;border-radius:2px;}
+.loading{display:flex;align-items:center;justify-content:center;height:180px;color:#9aa0b4;font-size:13px;}
+.spinner{width:18px;height:18px;border:2px solid #0f3460;border-top-color:#e94560;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{display:flex;align-items:center;justify-content:center;height:260px;color:#555;font-size:13px;}
 </style>
 </head>
 <body>
 
-<!-- Password overlay -->
 <div id="pw-overlay">
   <div class="pw-box">
     <h2>🔐 Admin Access</h2>
@@ -157,46 +166,33 @@ select.form-control{cursor:pointer;}
   </div>
 </div>
 
-<!-- Main app -->
-<div id="app" style="display:none;flex-direction:column;height:100vh;">
+<div id="app">
   <div class="topbar">
     <h1>⚡ Quant DB Editor</h1>
     <span class="topbar-info" id="db-info">Loading…</span>
     <div class="topbar-right">
       <button class="btn btn-ghost" onclick="loadProblems()">↺ Refresh</button>
-      <button class="btn btn-ghost" style="color:#e94560;" onclick="logout()">Lock</button>
+      <button class="btn btn-ghost" style="color:#e94560" onclick="logout()">Lock</button>
     </div>
   </div>
   <div class="main">
-    <!-- Sidebar -->
     <div class="sidebar">
       <div class="sidebar-head">
-        <input class="search-box" type="text" id="search-input" placeholder="Search problems…" oninput="renderList()">
+        <input class="search-box" type="text" id="s-search" placeholder="Search…" oninput="renderList()">
         <div class="filter-row">
-          <select class="filter-select" id="filter-company" onchange="renderList()">
-            <option value="">All companies</option>
-          </select>
-          <select class="filter-select" id="filter-difficulty" onchange="renderList()">
-            <option value="">All difficulties</option>
+          <select class="filter-sel" id="s-company" onchange="renderList()"><option value="">All companies</option></select>
+          <select class="filter-sel" id="s-diff" onchange="renderList()">
+            <option value="">All diff.</option>
             <option>easy</option><option>medium</option><option>hard</option><option>very_hard</option>
           </select>
         </div>
       </div>
       <div class="problem-list" id="problem-list"></div>
-      <div class="sidebar-count" id="sidebar-count"></div>
+      <div class="sidebar-foot" id="s-count"></div>
     </div>
-
-    <!-- Editor + Preview -->
     <div class="content">
-      <div class="editor-panel" id="editor-panel">
-        <div class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="#9aa0b4"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
-          <span>Select a problem to edit</span>
-        </div>
-      </div>
-      <div class="preview-panel" id="preview-panel">
-        <div class="empty-state"><span style="color:#9aa0b4">Preview will appear here</span></div>
-      </div>
+      <div class="editor-panel" id="editor-panel"><div class="empty">Select a problem to edit</div></div>
+      <div class="preview-panel" id="preview-panel"><div class="empty">Preview will appear here</div></div>
     </div>
   </div>
 </div>
@@ -204,9 +200,9 @@ select.form-control{cursor:pointer;}
 <script>
 // ── Config ──
 const SUPABASE_URL = 'https://qcohkjqflitxibplftcw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjb2hranFmbGl0eGlicGxmdGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzQzOTEsImV4cCI6MjA5MzAxMDM5MX0.hHtZ5PMQU-wdJtvJ4S3-xfT9XwQ1ZHuqUuiuHraKBRg';
-// Password: quant2026  (change by updating this base64 value: btoa('yourpassword'))
-const ADMIN_PASSWORD_HASH = 'cXVhbnQyMDI2';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjb2hranFmbGl0eGlicGxmdGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzQzOTEsImV4cCI6MjA5MzAxMDM5MX0.hHtZ5PMQU-wdJtvJ4S3-xfT9XwQ1ZHuqUuiuHraKBRg';
+// Password: quant2026  — change: btoa('yournewpassword')
+const ADMIN_HASH = 'cXVhbnQyMDI2';
 
 const DIFFICULTIES = ['easy','medium','hard','very_hard'];
 const MATH_APPROACHES = ['algebraic','geometric','analytic','computational','probabilistic','combinatorial','symmetric','approximation','statistical','inductive','contradiction','constructive'];
@@ -215,357 +211,406 @@ const PROBLEM_LABELS = ['must-do','conceptual','frequently-tested','hard','trick
 const COMPANIES = ['Citadel','Citadel Securities','HRT','Two Sigma','Squarepoint','Point72','Cubist','SIG','Jane Street','Jump Trading','DE Shaw','Five Rings','Millennium','WorldQuant','Voleon Group','IMC Trading','Barclays'];
 const LOCATIONS = ['US','UK','Europe','Hong Kong','Singapore','China'];
 const QUANT_TOPICS = ['Induction','Logical Reasoning','Symmetry','Series','Pigeon Principle','Problem Simplification','Modular Arithmetic','Proof by Contradiction','Calculus Methods','Vector Geometry','Determinant and Rank','Eigenvalues and Eigenvectors','Positive Semi-Definiteness (PSD)','Quadratic Forms','QR Decompositions','SVD Decomposition','LU and Cholesky Decompositions','Principle Component Analysis (PCA)','Probability Modeling','Counting','Geometric Probability','Combinatorial Probability','Inclusion and Exclusion Principle','Conditional Probability and Bayesian Law','Expectation and Variance','Covariance and Correlation','Uniform Distribution','Geometric Distribution','Exponential Distribution','Poisson Distribution','(Multivariate) Gaussian Distributions','Linearity of Expectations','Order Statistics','Max and Min','Applications of Symmetry','Markov Chain','Martingale','Random Walk','Brownian Motion','Stochastic Calculus','Poisson Processes','Dynamical Programming','Coin Flipping','Dice Rolling','Game Theory','Estimators','Sampling Distribution','Bias-Variance','Likelihood','Bayesian Inference','Law of Large Numbers (LLN)','Central Limit Theorem (CLT)','Rejection Sampling','Uniform Sampling','Hypothesis Testing','Linear Regression','Ridge and Lasso Regression','Logistic Regression','Quantile Regression','Maximum Likelihood Estimate (MLE)','Time Series Analysis','Monte Carlo','Information Theory','Games','Randomization Strategy','Bidding','Optimization','Numerical Methods','Algorithms and Data Structures','Approximation','Paradox','Factorials','Number Theory','Prime Number','Permutations','Combinations','Harmonic Number','Cards','Binomial Distribution','Bernoulli Distribution','Brain Teasers','Recursion','Inequalities (Estimate)','Nash Equilibrium','Optimal Strategy','Pigeonhole Principle','Sharpe Ratio','Finance'];
-const FOUR_WEEK_TOPICS = ['Foundations of Probability Modeling','Conditional Probability','Distributions','Gaussian Distribution','Expectation & Variance','Covariance & Correlation','Miscellaneous Topics','Markov Chains','Martingales & Random Walks','Dynamic Programming','CLT & Law of Large Numbers','Hypothesis Testing','Linear Regression I','Linear Regression II','Time Series Basics','Monte Carlo Methods','Nash Equilibrium','Bayesian Games','Number Theory and Mental Math','Brain Teasers','Options Pricing and Black-Scholes'];
+const FOUR_WEEK = ['Foundations of Probability Modeling','Conditional Probability','Distributions','Gaussian Distribution','Expectation & Variance','Covariance & Correlation','Miscellaneous Topics','Markov Chains','Martingales & Random Walks','Dynamic Programming','CLT & Law of Large Numbers','Hypothesis Testing','Linear Regression I','Linear Regression II','Time Series Basics','Monte Carlo Methods','Nash Equilibrium','Bayesian Games','Number Theory and Mental Math','Brain Teasers','Options Pricing and Black-Scholes'];
 
-// ── State ──
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let allProblems = [];
-let currentProblem = null;
-let filteredProblems = [];
-let openDropdown = null;
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let allProblems = [], currentProblem = null, currentSubKey = null, openDropdown = null;
 
 // ── Auth ──
-function tryLogin() {
-    const val = document.getElementById('pw-input').value;
-    if (btoa(val) === ADMIN_PASSWORD_HASH) {
-        document.getElementById('pw-overlay').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        loadProblems();
-    } else {
-        document.getElementById('pw-err').textContent = 'Incorrect password.';
-        document.getElementById('pw-input').value = '';
-    }
+function tryLogin(){
+  if(btoa(document.getElementById('pw-input').value)===ADMIN_HASH){
+    document.getElementById('pw-overlay').style.display='none';
+    document.getElementById('app').style.display='flex';
+    loadProblems();
+  } else {
+    document.getElementById('pw-err').textContent='Incorrect password.';
+    document.getElementById('pw-input').value='';
+  }
 }
-function logout() {
-    document.getElementById('pw-overlay').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-err').textContent = '';
+function logout(){
+  document.getElementById('pw-overlay').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('pw-input').value='';
+  document.getElementById('pw-err').textContent='';
 }
 
 // ── Load ──
-async function loadProblems() {
-    document.getElementById('db-info').textContent = 'Loading…';
-    document.getElementById('problem-list').innerHTML = '<div class="loading"><div class="spinner"></div>Loading problems…</div>';
-    const { data, error } = await db.from('problems').select('*').order('id');
-    if (error) { document.getElementById('db-info').textContent = 'Error: ' + error.message; return; }
-    allProblems = data;
-    document.getElementById('db-info').textContent = `${data.length} problems loaded`;
-    populateCompanyFilter();
-    renderList();
+async function loadProblems(){
+  document.getElementById('db-info').textContent='Loading…';
+  document.getElementById('problem-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
+  const {data,error}=await db.from('problems').select('*').order('id');
+  if(error){document.getElementById('db-info').textContent='Error: '+error.message;return;}
+  allProblems=data;
+  document.getElementById('db-info').textContent=`${data.length} problems`;
+  populateCompanyFilter();
+  renderList();
 }
 
-function populateCompanyFilter() {
-    const sel = document.getElementById('filter-company');
-    const companies = new Set();
-    allProblems.forEach(p => (p.company_labels||[]).forEach(c => companies.add(c)));
-    sel.innerHTML = '<option value="">All companies</option>';
-    [...companies].sort().forEach(c => {
-        const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
-    });
+function populateCompanyFilter(){
+  const sel=document.getElementById('s-company');
+  const cos=new Set();
+  allProblems.forEach(p=>(p.company_labels||[]).forEach(c=>cos.add(c)));
+  sel.innerHTML='<option value="">All companies</option>';
+  [...cos].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
 }
 
-// ── Render list ──
-function renderList() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    const company = document.getElementById('filter-company').value;
-    const diff = document.getElementById('filter-difficulty').value;
-
-    filteredProblems = allProblems.filter(p => {
-        if (q && !(p.problem_name||'').toLowerCase().includes(q) && !(p.id||'').toLowerCase().includes(q) && !(p.problem_text||'').toLowerCase().includes(q)) return false;
-        if (company && !(p.company_labels||[]).includes(company)) return false;
-        if (diff && p.difficulty !== diff) return false;
-        return true;
-    });
-
-    const list = document.getElementById('problem-list');
-    list.innerHTML = '';
-    filteredProblems.forEach(p => {
-        const el = document.createElement('div');
-        el.className = 'problem-item' + (currentProblem && currentProblem.id === p.id ? ' active' : '');
-        el.dataset.id = p.id;
-        const diffBadge = `<span class="badge badge-${p.difficulty||'null'}">${p.difficulty||'—'}</span>`;
-        const incBadge = `<span class="badge ${p.included ? 'badge-included' : 'badge-excluded'}">${p.included ? '✓' : '✗'}</span>`;
-        el.innerHTML = `<div class="p-name">${p.problem_name || p.id}</div><div class="p-meta">${diffBadge}${incBadge}<span style="color:#555">${(p.company_labels||[]).join(', ')}</span></div>`;
-        el.onclick = () => selectProblem(p);
-        list.appendChild(el);
-    });
-    document.getElementById('sidebar-count').textContent = `${filteredProblems.length} / ${allProblems.length} problems`;
+function renderList(){
+  const q=document.getElementById('s-search').value.toLowerCase();
+  const co=document.getElementById('s-company').value;
+  const di=document.getElementById('s-diff').value;
+  const filtered=allProblems.filter(p=>{
+    if(q&&!(p.problem_name||'').toLowerCase().includes(q)&&!(p.id||'').toLowerCase().includes(q)&&!(p.problem_text||'').toLowerCase().includes(q))return false;
+    if(co&&!(p.company_labels||[]).includes(co))return false;
+    if(di&&p.difficulty!==di)return false;
+    return true;
+  });
+  const list=document.getElementById('problem-list');
+  list.innerHTML='';
+  filtered.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='problem-item'+(currentProblem&&currentProblem.id===p.id?' active':'');
+    el.dataset.id=p.id;
+    el.innerHTML=`<div class="p-name">${p.problem_name||p.id}</div><div class="p-meta"><span class="badge badge-${p.difficulty||'null'}">${p.difficulty||'—'}</span><span class="badge ${p.included?'badge-in':'badge-ex'}">${p.included?'✓':'✗'}</span><span style="color:#555;font-size:10px">${(p.company_labels||[]).join(', ')}</span></div>`;
+    el.onclick=()=>selectProblem(p);
+    list.appendChild(el);
+  });
+  document.getElementById('s-count').textContent=`${filtered.length} / ${allProblems.length}`;
 }
 
-// ── Select problem ──
-function selectProblem(p) {
-    currentProblem = JSON.parse(JSON.stringify(p)); // deep copy
-    document.querySelectorAll('.problem-item').forEach(el => el.classList.toggle('active', el.dataset.id === p.id));
-    renderEditor();
-    renderPreview();
+function selectProblem(p){
+  currentProblem=JSON.parse(JSON.stringify(p));
+  currentSubKey=null;
+  document.querySelectorAll('.problem-item').forEach(el=>el.classList.toggle('active',el.dataset.id===p.id));
+  renderEditor();
+  renderPreview();
+}
+
+// ── LaTeX renderer ──
+function renderLatex(text){
+  if(!text) return '';
+  const protEnvs=[];
+  const PH='___PE_';
+  function protect(t){
+    const idx=protEnvs.length; protEnvs.push(t); return PH+idx+'___';
+  }
+  // Protect math
+  text=text.replace(/\$\$[\s\S]*?\$\$/g,m=>protect(m));
+  text=text.replace(/\\\[[\s\S]*?\\\]/g,m=>protect(m));
+  text=text.replace(/\\\([\s\S]*?\\\)/g,m=>protect(m));
+  text=text.replace(/\$([^\$\n]+?)\$/g,m=>protect(m));
+  // Protect align/equation environments
+  text=text.replace(/\\begin\{(align\*?|aligned|gather\*?|equation\*?|array|matrix|pmatrix|bmatrix|cases|eqnarray\*?|multline\*?|split)\}[\s\S]*?\\end\{\1\}/g,m=>protect(m));
+  // Convert itemize
+  text=text.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g,(_,c)=>{
+    const items=c.split(/\\item\s*/g).filter(s=>s.trim());
+    return '<ul style="margin:8px 0;padding-left:22px">'+items.map(i=>'<li>'+i.trim()+'</li>').join('')+'</ul>';
+  });
+  // Convert enumerate
+  text=text.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g,(_,c)=>{
+    const items=c.split(/\\item\s*/g).filter(s=>s.trim());
+    return '<ol style="margin:8px 0;padding-left:22px">'+items.map(i=>'<li>'+i.trim()+'</li>').join('')+'</ol>';
+  });
+  // Text formatting
+  text=text.replace(/\\textbf\{([^}]+)\}/g,'<b>$1</b>');
+  text=text.replace(/\\textit\{([^}]+)\}/g,'<i>$1</i>');
+  text=text.replace(/\\emph\{([^}]+)\}/g,'<em>$1</em>');
+  text=text.replace(/\\underline\{([^}]+)\}/g,'<u>$1</u>');
+  text=text.replace(/\\text\{([^}]+)\}/g,'$1');
+  // Spacing
+  text=text.replace(/\\qquad\b/g,'<span style="margin-left:2em"></span>');
+  text=text.replace(/\\quad\b/g,'<span style="margin-left:1em"></span>');
+  // Paragraph breaks
+  text=text.replace(/\\par\b/g,'<br><br>');
+  // Line breaks (not inside math)
+  text=text.replace(/\\\\(?![a-zA-Z])/g,'<br>');
+  // Restore
+  for(let i=protEnvs.length-1;i>=0;i--) text=text.split(PH+i+'___').join(protEnvs[i]);
+  return text;
+}
+
+// ── Tag helpers ──
+function renderTagField(field,label,options,tagCls){
+  const vals=currentProblem[field]||[];
+  const tags=vals.map(v=>`<span class="tag ${tagCls}">${v}<span class="trm" onclick="removeTag('${field}','${v.replace(/'/g,"\\'")}')">×</span></span>`).join('');
+  return `<div class="fg"><label class="lbl">${label}</label><div class="tag-wrap"><div class="tag-box" onclick="toggleDD('${field}',event)">${tags}<input class="t-inp" id="ti-${field}" placeholder="+ add" oninput="filterDD('${field}',this.value)" onclick="event.stopPropagation();showDD('${field}')"></div><div class="t-dd" id="dd-${field}" style="display:none"></div></div></div>`;
+}
+function renderSubTagField(field,label,options,tagCls,subKey){
+  const sub=((currentProblem.subproblems||{})[subKey])||{};
+  const vals=sub[field]||[];
+  const sfx=subKey+'_'+field;
+  const tags=vals.map(v=>`<span class="tag ${tagCls}">${v}<span class="trm" onclick="removeSubTag('${subKey}','${field}','${v.replace(/'/g,"\\'")}')">×</span></span>`).join('');
+  return `<div class="fg"><label class="lbl">${label}</label><div class="tag-wrap"><div class="tag-box" onclick="toggleDD('${sfx}',event)">${tags}<input class="t-inp" id="ti-${sfx}" placeholder="+ add" oninput="filterDD('${sfx}',this.value)" onclick="event.stopPropagation();showDD('${sfx}')"></div><div class="t-dd" id="dd-${sfx}" style="display:none"></div></div></div>`;
+}
+const TAG_OPTIONS={quant_topics:QUANT_TOPICS,four_week_topics:FOUR_WEEK,math_approach:MATH_APPROACHES,reasoning_type:REASONING_TYPES,problem_labels:PROBLEM_LABELS,company_labels:COMPANIES,location_labels:LOCATIONS};
+const TAG_CLASS={quant_topics:'tq',four_week_topics:'tf',math_approach:'ta',reasoning_type:'tr',problem_labels:'tl',company_labels:'tc',location_labels:'tlo'};
+
+function toggleDD(id,e){e.stopPropagation();const dd=document.getElementById('dd-'+id);dd.style.display==='none'?showDD(id):hideDD(id);}
+function showDD(id){if(openDropdown&&openDropdown!==id)hideDD(openDropdown);openDropdown=id;filterDD(id,document.getElementById('ti-'+id)?.value||'');document.getElementById('dd-'+id).style.display='block';}
+function hideDD(id){const dd=document.getElementById('dd-'+id);if(dd)dd.style.display='none';openDropdown=null;}
+function filterDD(id,q){
+  // id is either a field name or subKey_field
+  let field,subKey;
+  const parts=id.match(/^(.+)_(quant_topics|four_week_topics|math_approach|reasoning_type|problem_labels|company_labels|location_labels)$/);
+  if(parts){subKey=parts[1];field=parts[2];}else{field=id;}
+  const opts=TAG_OPTIONS[field]||[];
+  const cur=subKey?((currentProblem.subproblems||{})[subKey]||{})[field]||[]:currentProblem[field]||[];
+  const qL=(q||'').toLowerCase();
+  const dd=document.getElementById('dd-'+id);
+  if(!dd)return;
+  dd.innerHTML=opts.filter(o=>!qL||o.toLowerCase().includes(qL)).map(o=>`<div class="t-opt ${cur.includes(o)?'sel':''}" onclick="toggleTagDD('${id}','${o.replace(/'/g,"\\'")}',event)">${cur.includes(o)?'✓ ':' '}${o}</div>`).join('')||'<div style="padding:7px 11px;color:#555;font-size:12px">No options</div>';
+}
+function toggleTagDD(id,val,e){
+  if(e)e.stopPropagation();
+  const parts=id.match(/^(.+)_(quant_topics|four_week_topics|math_approach|reasoning_type|problem_labels|company_labels|location_labels)$/);
+  if(parts){const sk=parts[1],field=parts[2];toggleSubTag(sk,field,val);}else{toggleTag(id,val);}
+}
+function toggleTag(field,val){
+  const arr=[...(currentProblem[field]||[])];
+  const i=arr.indexOf(val);i>=0?arr.splice(i,1):arr.push(val);
+  currentProblem[field]=arr;reRenderTagBox(field,null);
+}
+function removeTag(field,val){toggleTag(field,val);}
+function toggleSubTag(sk,field,val){
+  if(!currentProblem.subproblems)currentProblem.subproblems={};
+  if(!currentProblem.subproblems[sk])currentProblem.subproblems[sk]={};
+  const arr=[...(currentProblem.subproblems[sk][field]||[])];
+  const i=arr.indexOf(val);i>=0?arr.splice(i,1):arr.push(val);
+  currentProblem.subproblems[sk][field]=arr;
+  reRenderTagBox(sk+'_'+field,sk);
+}
+function removeSubTag(sk,field,val){toggleSubTag(sk,field,val);}
+function reRenderTagBox(id,subKey){
+  const parts=id.match(/^(.+)_(quant_topics|four_week_topics|math_approach|reasoning_type|problem_labels|company_labels|location_labels)$/);
+  let field=parts?parts[2]:id;
+  const vals=subKey?((currentProblem.subproblems||{})[subKey]||{})[field]||[]:currentProblem[field]||[];
+  const cls=TAG_CLASS[field]||'';
+  const box=document.getElementById('dd-'+id)?.previousElementSibling;
+  if(!box)return;
+  const inp=box.querySelector('.t-inp');
+  const inputVal=inp?inp.value:'';
+  const removeFn=subKey?`removeSubTag('${subKey}','${field}',v)`:`removeTag('${field}',v)`;
+  box.innerHTML=vals.map(v=>`<span class="tag ${cls}">${v}<span class="trm" onclick="removeTag_helper('${id.replace(/'/g,"\\'")}','${v.replace(/'/g,"\\'")}')">×</span></span>`).join('')+`<input class="t-inp" id="ti-${id}" placeholder="+ add" oninput="filterDD('${id}',this.value)" onclick="event.stopPropagation();showDD('${id}')" value="${inputVal}">`;
+  filterDD(id,inputVal);
+}
+function removeTag_helper(id,val){
+  const parts=id.match(/^(.+)_(quant_topics|four_week_topics|math_approach|reasoning_type|problem_labels|company_labels|location_labels)$/);
+  if(parts)toggleSubTag(parts[1],parts[2],val);else toggleTag(id,val);
+}
+document.addEventListener('click',()=>{if(openDropdown)hideDD(openDropdown);});
+
+// ── Hints helpers ──
+function renderHintsList(hints,updateFn,addFn,removeFn){
+  const arr=hints||[];
+  return `<div class="hint-list" id="hl-${addFn.replace(/[^a-z]/gi,'_')}">
+    ${arr.map((h,i)=>`<div class="hint-item"><span class="hint-num">H${i+1}</span><textarea class="fc" rows="2" oninput="${updateFn}(${i},this.value)">${esc(typeof h==='object'?h.hint_text||'':h)}</textarea><button class="btn btn-del" onclick="${removeFn}(${i})" style="flex-shrink:0">✕</button></div>`).join('')}
+  </div>
+  <button class="btn btn-add" style="margin-top:5px" onclick="${addFn}()">+ Add Hint</button>`;
+}
+
+// Main problem hints
+function updateHint(i,v){const hints=currentProblem.hints||[];if(typeof hints[i]==='object')hints[i].hint_text=v;else hints[i]=v;currentProblem.hints=hints;}
+function addHint(){const h=currentProblem.hints||[];h.push({hint_text:'',hint_order:h.length});currentProblem.hints=h;renderEditor();}
+function removeHint(i){const h=currentProblem.hints||[];h.splice(i,1);currentProblem.hints=h;renderEditor();}
+
+// Sub hints
+function updateSubHint(sk,i,v){const s=currentProblem.subproblems[sk];const h=s.hints||[];if(typeof h[i]==='object')h[i].hint_text=v;else h[i]=v;s.hints=h;}
+function addSubHint(sk){const s=currentProblem.subproblems[sk];const h=s.hints||[];h.push({hint_text:'',hint_order:h.length});s.hints=h;renderEditor();}
+function removeSubHint(sk,i){const s=currentProblem.subproblems[sk];const h=s.hints||[];h.splice(i,1);s.hints=h;renderEditor();}
+
+// ── Subproblem helpers ──
+function getSubKeys(){return Object.keys(currentProblem.subproblems||{}).sort();}
+function addSubproblem(){
+  if(!currentProblem.subproblems)currentProblem.subproblems={};
+  const existing=getSubKeys();
+  const next=String.fromCharCode(97+existing.length); // a,b,c...
+  currentProblem.subproblems[next]={problem_text:'',correct_answer:'',hint:'',hints:[],comment:'',solution:{text:'',images:[]},images:[]};
+  currentSubKey=next;
+  renderEditor();
+}
+function deleteSubproblem(sk){
+  if(!confirm(`Delete subproblem ${sk}?`))return;
+  delete currentProblem.subproblems[sk];
+  currentSubKey=null;
+  renderEditor();
+}
+function selectSubTab(sk){currentSubKey=sk;renderSubEditor();}
+
+function patchSub(sk,field,val){
+  if(!currentProblem.subproblems[sk])return;
+  currentProblem.subproblems[sk][field]=val;
+}
+function patchSubSol(sk,val){
+  if(!currentProblem.subproblems[sk])return;
+  if(!currentProblem.subproblems[sk].solution)currentProblem.subproblems[sk].solution={text:'',images:[]};
+  currentProblem.subproblems[sk].solution.text=val;
 }
 
 // ── Render editor ──
-function renderEditor() {
-    const p = currentProblem;
-    const panel = document.getElementById('editor-panel');
-    panel.innerHTML = `
-    <div class="section-header">Identity</div>
-    <div class="form-group">
-      <label class="form-label">ID</label>
-      <input class="form-control" value="${esc(p.id)}" readonly style="opacity:.5;cursor:default;">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Doc ID</label>
-      <input class="form-control" id="f-doc_id" value="${esc(p.doc_id||'')}" oninput="patch('doc_id',this.value)">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Problem Name</label>
-      <input class="form-control" id="f-problem_name" value="${esc(p.problem_name||'')}" oninput="patch('problem_name',this.value)">
-    </div>
+function renderEditor(){
+  const p=currentProblem;
+  const panel=document.getElementById('editor-panel');
+  const subKeys=getSubKeys();
 
-    <div class="section-header">Content</div>
-    <div class="form-group">
-      <label class="form-label">Problem Text (LaTeX)</label>
-      <textarea class="form-control" id="f-problem_text" rows="6" oninput="patch('problem_text',this.value);debouncePreview()">${esc(p.problem_text||'')}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Correct Answer</label>
-      <textarea class="form-control" id="f-correct_answer" rows="3" oninput="patch('correct_answer',this.value)">${esc(p.correct_answer||'')}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Solution Text (LaTeX)</label>
-      <textarea class="form-control" id="f-solution_text" rows="8" oninput="patchSolution(this.value);debouncePreview()">${esc(getSolutionText(p))}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Hint</label>
-      <textarea class="form-control" id="f-hint" rows="2" oninput="patch('hint',this.value)">${esc(p.hint||'')}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Comment</label>
-      <textarea class="form-control" id="f-comment" rows="3" oninput="patch('comment',this.value)">${esc(p.comment||'')}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Keyword</label>
-      <textarea class="form-control" id="f-keyword" rows="2" oninput="patch('keyword',this.value)">${esc(p.keyword||'')}</textarea>
-    </div>
+  panel.innerHTML=`
+  <div class="sec">Identity</div>
+  <div class="fg"><label class="lbl">ID</label><input class="fc" value="${esc(p.id)}" readonly style="opacity:.4;cursor:default"></div>
+  <div class="fg"><label class="lbl">Doc ID</label><input class="fc" id="f-doc_id" value="${esc(p.doc_id||'')}" oninput="currentProblem.doc_id=this.value"></div>
+  <div class="fg"><label class="lbl">Problem Name</label><input class="fc" id="f-name" value="${esc(p.problem_name||'')}" oninput="currentProblem.problem_name=this.value"></div>
 
-    <div class="section-header">Classification</div>
-    <div class="form-group">
-      <label class="form-label">Difficulty</label>
-      <select class="form-control" id="f-difficulty" onchange="patch('difficulty',this.value||null)">
-        <option value="" ${!p.difficulty?'selected':''}>— None —</option>
-        ${DIFFICULTIES.map(d=>`<option value="${d}" ${p.difficulty===d?'selected':''}>${d}</option>`).join('')}
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Importance (1–3)</label>
-      <input class="form-control" type="number" id="f-importance" min="1" max="3" value="${p.importance||''}" oninput="patch('importance',this.value?parseInt(this.value):null)" style="width:120px;">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Version</label>
-      <input class="form-control" id="f-version" value="${esc(p.version||'')}" oninput="patch('version',this.value)" style="width:120px;">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Flags</label>
-      <div class="checkbox-row">
-        <label class="checkbox-item"><input type="checkbox" id="f-included" ${p.included?'checked':''} onchange="patch('included',this.checked)"> Included</label>
-        <label class="checkbox-item"><input type="checkbox" id="f-is_free" ${p.is_free?'checked':''} onchange="patch('is_free',this.checked)"> Free</label>
-        <label class="checkbox-item"><input type="checkbox" id="f-is_recent" ${p.is_recent?'checked':''} onchange="patch('is_recent',this.checked)"> Recent</label>
-      </div>
-    </div>
+  <div class="sec">Content</div>
+  <div class="fg"><label class="lbl">Problem Text (LaTeX)</label><textarea class="fc" rows="5" oninput="currentProblem.problem_text=this.value;dPrev()">${esc(p.problem_text||'')}</textarea></div>
+  <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="3" oninput="currentProblem.correct_answer=this.value">${esc(p.correct_answer||'')}</textarea></div>
+  <div class="fg"><label class="lbl">Solution (LaTeX)</label><textarea class="fc" rows="7" oninput="currentProblem.solution=currentProblem.solution||{text:'',images:[]};currentProblem.solution.text=this.value;dPrev()">${esc(getSolText(p))}</textarea></div>
+  <div class="fg"><label class="lbl">Hint</label><textarea class="fc" rows="2" oninput="currentProblem.hint=this.value">${esc(p.hint||'')}</textarea></div>
+  <div class="fg"><label class="lbl">Hints</label>${renderHintsList(p.hints,'updateHint','addHint','removeHint')}</div>
+  <div class="fg"><label class="lbl">Comment</label><textarea class="fc" rows="2" oninput="currentProblem.comment=this.value">${esc(p.comment||'')}</textarea></div>
+  <div class="fg"><label class="lbl">Keyword</label><textarea class="fc" rows="2" oninput="currentProblem.keyword=this.value">${esc(p.keyword||'')}</textarea></div>
 
-    <div class="section-header">Topics & Labels</div>
-    ${renderTagField('quant_topics', 'Quant Topics', QUANT_TOPICS, 'tag-quant')}
-    ${renderTagField('four_week_topics', 'Four-Week Topics', FOUR_WEEK_TOPICS, 'tag-four')}
-    ${renderTagField('math_approach', 'Math Approach', MATH_APPROACHES, 'tag-approach')}
-    ${renderTagField('reasoning_type', 'Reasoning Type', REASONING_TYPES, 'tag-reasoning')}
-    ${renderTagField('problem_labels', 'Problem Labels', PROBLEM_LABELS, 'tag-label')}
-    ${renderTagField('company_labels', 'Company Labels', COMPANIES, 'tag-company')}
-    ${renderTagField('location_labels', 'Location Labels', LOCATIONS, 'tag-location')}
+  <div class="sec">Classification</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:13px">
+    <div><label class="lbl">Difficulty</label><select class="fc" onchange="currentProblem.difficulty=this.value||null"><option value="" ${!p.difficulty?'selected':''}>— None —</option>${DIFFICULTIES.map(d=>`<option ${p.difficulty===d?'selected':''}>${d}</option>`).join('')}</select></div>
+    <div><label class="lbl">Importance</label><input class="fc" type="number" min="1" max="3" value="${p.importance||''}" oninput="currentProblem.importance=this.value?+this.value:null"></div>
+    <div><label class="lbl">Version</label><input class="fc" value="${esc(p.version||'')}" oninput="currentProblem.version=this.value"></div>
+  </div>
+  <div class="fg"><label class="lbl">Flags</label><div class="cb-row">
+    <label class="cb"><input type="checkbox" ${p.included?'checked':''} onchange="currentProblem.included=this.checked"> Included</label>
+    <label class="cb"><input type="checkbox" ${p.is_free?'checked':''} onchange="currentProblem.is_free=this.checked"> Free</label>
+    <label class="cb"><input type="checkbox" ${p.is_recent?'checked':''} onchange="currentProblem.is_recent=this.checked"> Recent</label>
+  </div></div>
 
-    <div class="save-row">
-      <button class="btn btn-save" id="save-btn" onclick="saveProblem()">💾 Save to Database</button>
-      <span class="save-status" id="save-status"></span>
-    </div>`;
+  <div class="sec">Topics & Labels</div>
+  ${renderTagField('quant_topics','Quant Topics',QUANT_TOPICS,'tq')}
+  ${renderTagField('four_week_topics','Four-Week Topics',FOUR_WEEK,'tf')}
+  ${renderTagField('math_approach','Math Approach',MATH_APPROACHES,'ta')}
+  ${renderTagField('reasoning_type','Reasoning Type',REASONING_TYPES,'tr')}
+  ${renderTagField('problem_labels','Problem Labels',PROBLEM_LABELS,'tl')}
+  ${renderTagField('company_labels','Company Labels',COMPANIES,'tc')}
+  ${renderTagField('location_labels','Location Labels',LOCATIONS,'tlo')}
+
+  <div class="sec">Subproblems</div>
+  <div class="sub-tabs">
+    ${subKeys.map(k=>`<div class="sub-tab${currentSubKey===k?' active':''}" onclick="selectSubTab('${k}')">${k.toUpperCase()}</div>`).join('')}
+    <div class="sub-tab add-tab" onclick="addSubproblem()">+ Add</div>
+  </div>
+  <div id="sub-editor-area">${currentSubKey&&currentProblem.subproblems[currentSubKey]?renderSubEditorContent(currentSubKey):'<div style="color:#555;font-size:12px;padding:8px">Click a subproblem tab to edit, or add a new one.</div>'}</div>
+
+  <div class="save-row">
+    <button class="btn btn-red" id="save-btn" onclick="saveProblem()">💾 Save to Database</button>
+    <span id="save-st"></span>
+  </div>`;
 }
 
-function renderTagField(field, label, options, tagClass) {
-    const vals = currentProblem[field] || [];
-    const tagsHtml = vals.map(v =>
-        `<span class="tag ${tagClass}">${v}<span class="tag-remove" onclick="removeTag('${field}','${v.replace(/'/g,"\\'")}')">×</span></span>`
-    ).join('');
-    return `
-    <div class="form-group">
-      <label class="form-label">${label}</label>
-      <div class="tag-wrapper">
-        <div class="tag-container" onclick="toggleDropdown('${field}',event)">
-          ${tagsHtml}
-          <input class="tag-input" placeholder="+ add" id="tag-input-${field}" oninput="filterDropdown('${field}',this.value)" onclick="event.stopPropagation();showDropdown('${field}')">
-        </div>
-        <div class="tag-dropdown" id="dd-${field}" style="display:none;"></div>
-      </div>
-    </div>`;
+function renderSubEditorContent(sk){
+  const s=(currentProblem.subproblems||{})[sk]||{};
+  return `<div class="sub-content">
+    <div class="sub-del-row"><button class="btn btn-del" onclick="deleteSubproblem('${sk}')">Delete ${sk.toUpperCase()}</button></div>
+    <div class="fg"><label class="lbl">Problem Text</label><textarea class="fc" rows="4" id="sub-pt-${sk}" oninput="patchSub('${sk}','problem_text',this.value);dPrev()">${esc(s.problem_text||'')}</textarea></div>
+    <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','correct_answer',this.value)">${esc(s.correct_answer||'')}</textarea></div>
+    <div class="fg"><label class="lbl">Solution (LaTeX)</label><textarea class="fc" rows="6" oninput="patchSubSol('${sk}',this.value);dPrev()">${esc(s.solution&&s.solution.text?s.solution.text:'')}</textarea></div>
+    <div class="fg"><label class="lbl">Hint</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','hint',this.value)">${esc(s.hint||'')}</textarea></div>
+    <div class="fg"><label class="lbl">Hints</label>${renderHintsList(s.hints,`updateSubHint.bind(null,'${sk}')`,`addSubHint.bind(null,'${sk}')`,`removeSubHint.bind(null,'${sk}')`)}</div>
+    <div class="fg"><label class="lbl">Comment</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','comment',this.value)">${esc(s.comment||'')}</textarea></div>
+  </div>`;
 }
 
-// ── Tag management ──
-function toggleDropdown(field, e) {
-    e.stopPropagation();
-    const dd = document.getElementById('dd-'+field);
-    if (dd.style.display === 'none') showDropdown(field);
-    else hideDropdown(field);
+function renderSubEditor(){
+  document.querySelectorAll('.sub-tab:not(.add-tab)').forEach(el=>{
+    el.classList.toggle('active',el.textContent.trim().toLowerCase()===currentSubKey);
+  });
+  document.getElementById('sub-editor-area').innerHTML=currentSubKey&&currentProblem.subproblems[currentSubKey]?renderSubEditorContent(currentSubKey):'<div style="color:#555;font-size:12px;padding:8px">Select a subproblem.</div>';
 }
-function showDropdown(field) {
-    if (openDropdown && openDropdown !== field) hideDropdown(openDropdown);
-    openDropdown = field;
-    filterDropdown(field, document.getElementById('tag-input-'+field).value);
-    document.getElementById('dd-'+field).style.display = 'block';
-}
-function hideDropdown(field) {
-    const dd = document.getElementById('dd-'+field);
-    if (dd) dd.style.display = 'none';
-    openDropdown = null;
-}
-function filterDropdown(field, q) {
-    const optMap = {quant_topics:QUANT_TOPICS,four_week_topics:FOUR_WEEK_TOPICS,math_approach:MATH_APPROACHES,reasoning_type:REASONING_TYPES,problem_labels:PROBLEM_LABELS,company_labels:COMPANIES,location_labels:LOCATIONS};
-    const options = optMap[field] || [];
-    const current = currentProblem[field] || [];
-    const qLower = (q||'').toLowerCase();
-    const filtered = options.filter(o => !qLower || o.toLowerCase().includes(qLower));
-    const dd = document.getElementById('dd-'+field);
-    dd.innerHTML = filtered.map(o => {
-        const sel = current.includes(o);
-        return `<div class="tag-option ${sel?'selected':''}" onclick="toggleTag('${field}','${o.replace(/'/g,"\\'")}',event)">${sel?'✓ ':''} ${o}</div>`;
-    }).join('') || '<div style="padding:8px 12px;color:#9aa0b4;font-size:12px;">No options</div>';
-}
-function toggleTag(field, value, e) {
-    if (e) e.stopPropagation();
-    const arr = [...(currentProblem[field] || [])];
-    const idx = arr.indexOf(value);
-    if (idx >= 0) arr.splice(idx, 1); else arr.push(value);
-    currentProblem[field] = arr;
-    // Re-render just the tag container
-    const container = document.getElementById('dd-'+field).previousElementSibling;
-    const tagClass = {quant_topics:'tag-quant',four_week_topics:'tag-four',math_approach:'tag-approach',reasoning_type:'tag-reasoning',problem_labels:'tag-label',company_labels:'tag-company',location_labels:'tag-location'}[field];
-    const input = container.querySelector('.tag-input');
-    const inputVal = input ? input.value : '';
-    container.innerHTML = arr.map(v =>
-        `<span class="tag ${tagClass}">${v}<span class="tag-remove" onclick="removeTag('${field}','${v.replace(/'/g,"\\'")}')">×</span></span>`
-    ).join('') + `<input class="tag-input" placeholder="+ add" id="tag-input-${field}" oninput="filterDropdown('${field}',this.value)" onclick="event.stopPropagation();showDropdown('${field}')" value="${inputVal}">`;
-    filterDropdown(field, inputVal);
-}
-function removeTag(field, value) {
-    toggleTag(field, value, null);
-}
-document.addEventListener('click', () => { if (openDropdown) hideDropdown(openDropdown); });
 
-// ── Patch helpers ──
-function patch(field, value) { currentProblem[field] = value; }
-function patchSolution(text) {
-    if (!currentProblem.solution) currentProblem.solution = {text:'',images:[]};
-    currentProblem.solution.text = text;
-}
-function getSolutionText(p) { return (p.solution && p.solution.text) ? p.solution.text : ''; }
+function getSolText(p){return p&&p.solution&&p.solution.text?p.solution.text:'';}
 
 // ── Save ──
-async function saveProblem() {
-    const btn = document.getElementById('save-btn');
-    const status = document.getElementById('save-status');
-    btn.disabled = true; btn.textContent = '⏳ Saving…';
-    status.className = 'save-status'; status.textContent = '';
-
-    const row = { ...currentProblem };
-    // updated_at to now
-    row.updated_at = new Date().toISOString().replace('T',' ').substring(0,19);
-
-    const { error } = await db.from('problems').upsert(row, { onConflict: 'id' });
-    btn.disabled = false; btn.innerHTML = '💾 Save to Database';
-    if (error) {
-        status.className = 'save-error'; status.textContent = '✗ ' + error.message;
-    } else {
-        status.className = 'save-status'; status.textContent = '✓ Saved';
-        // Update allProblems cache
-        const idx = allProblems.findIndex(p => p.id === row.id);
-        if (idx >= 0) allProblems[idx] = { ...row };
-        renderList();
-        setTimeout(() => { status.textContent = ''; }, 3000);
-    }
+async function saveProblem(){
+  const btn=document.getElementById('save-btn');
+  const st=document.getElementById('save-st');
+  btn.disabled=true;btn.textContent='⏳ Saving…';st.className='';st.textContent='';
+  const row={...currentProblem,updated_at:new Date().toISOString().replace('T',' ').slice(0,19)};
+  const {error}=await db.from('problems').upsert(row,{onConflict:'id'});
+  btn.disabled=false;btn.innerHTML='💾 Save to Database';
+  if(error){st.className='save-err';st.textContent='✗ '+error.message;}
+  else{
+    st.className='save-ok';st.textContent='✓ Saved';
+    const i=allProblems.findIndex(p=>p.id===row.id);
+    if(i>=0)allProblems[i]={...row};
+    renderList();
+    setTimeout(()=>st.textContent='',3000);
+  }
 }
 
 // ── Preview ──
-let previewTimer = null;
-function debouncePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 600); }
+let prevTimer=null;
+function dPrev(){clearTimeout(prevTimer);prevTimer=setTimeout(renderPreview,500);}
 
-function renderPreview() {
-    const p = currentProblem;
-    const panel = document.getElementById('preview-panel');
-    const solText = getSolutionText(p);
-    panel.innerHTML = `
-    <div class="preview-title">${escHtml(p.problem_name || p.id)}</div>
+let prevSubKey=null;
+function renderPreview(){
+  const p=currentProblem;
+  const subKeys=getSubKeys();
+  if(!prevSubKey&&subKeys.length)prevSubKey=null;
+  const panel=document.getElementById('preview-panel');
+  panel.innerHTML=`
+  <div class="prev-title">${escH(p.problem_name||p.id)}</div>
 
-    <div class="preview-section">
-      <div class="preview-section-label">Problem</div>
-      <div class="preview-content" id="prev-problem">${renderLatex(p.problem_text||'<em style="color:#555">No problem text</em>')}</div>
+  <div class="prev-sec">
+    <div class="prev-lbl">Problem</div>
+    <div class="prev-box">${renderLatex(p.problem_text)||'<span style="color:#555">No text</span>'}</div>
+  </div>
+  ${p.correct_answer?`<div class="prev-sec"><div class="prev-lbl">Answer</div><div class="prev-box">${renderLatex(p.correct_answer)}</div></div>`:''}
+  ${getSolText(p)?`<div class="prev-sec"><div class="prev-lbl">Solution</div><div class="prev-box sol">${renderLatex(getSolText(p))}</div></div>`:''}
+
+  <div class="prev-sec">
+    <div class="prev-lbl">Metadata</div>
+    <div class="prev-grid">
+      <div class="prev-cell"><div class="prev-k">Difficulty</div><div class="prev-v">${p.difficulty||'—'}</div></div>
+      <div class="prev-cell"><div class="prev-k">Importance</div><div class="prev-v">${p.importance||'—'}</div></div>
+      <div class="prev-cell"><div class="prev-k">Version</div><div class="prev-v">${p.version||'—'}</div></div>
+      <div class="prev-cell"><div class="prev-k">Included</div><div class="prev-v">${p.included?'✓ Yes':'✗ No'}</div></div>
+      <div class="prev-cell"><div class="prev-k">Free / Recent</div><div class="prev-v">${p.is_free?'Free':'Paid'} · ${p.is_recent?'Recent':'—'}</div></div>
+      <div class="prev-cell"><div class="prev-k">Subproblems</div><div class="prev-v">${subKeys.length?subKeys.map(k=>k.toUpperCase()).join(', '):'—'}</div></div>
     </div>
+  </div>
 
-    ${p.correct_answer ? `
-    <div class="preview-section">
-      <div class="preview-section-label">Answer</div>
-      <div class="preview-content">${renderLatex(p.correct_answer)}</div>
-    </div>` : ''}
+  ${tagPrev('Quant Topics',p.quant_topics,'tq')}
+  ${tagPrev('Four-Week',p.four_week_topics,'tf')}
+  ${tagPrev('Approach',p.math_approach,'ta')}
+  ${tagPrev('Reasoning',p.reasoning_type,'tr')}
+  ${tagPrev('Labels',p.problem_labels,'tl')}
+  ${tagPrev('Companies',p.company_labels,'tc')}
+  ${tagPrev('Locations',p.location_labels,'tlo')}
 
-    ${solText ? `
-    <div class="preview-section">
-      <div class="preview-section-label">Solution</div>
-      <div class="preview-content solution-bg">${renderLatex(solText)}</div>
-    </div>` : ''}
+  ${subKeys.length?`
+  <div class="prev-sec">
+    <div class="prev-lbl">Subproblems</div>
+    <div class="prev-sub-tabs">${subKeys.map(k=>`<div class="prev-sub-tab${prevSubKey===k?' active':''}" onclick="setPrevSub('${k}')">${k.toUpperCase()}</div>`).join('')}</div>
+    <div id="sub-prev">${prevSubKey&&currentProblem.subproblems[prevSubKey]?renderSubPreview(prevSubKey):renderSubPreview(subKeys[0])}</div>
+  </div>`:''}
 
-    <div class="preview-section">
-      <div class="preview-section-label">Metadata</div>
-      <div class="preview-meta-grid">
-        <div class="preview-meta-item"><div class="preview-meta-key">Difficulty</div><div class="preview-meta-val">${p.difficulty||'—'}</div></div>
-        <div class="preview-meta-item"><div class="preview-meta-key">Importance</div><div class="preview-meta-val">${p.importance||'—'}</div></div>
-        <div class="preview-meta-item"><div class="preview-meta-key">Version</div><div class="preview-meta-val">${p.version||'—'}</div></div>
-        <div class="preview-meta-item"><div class="preview-meta-key">Included</div><div class="preview-meta-val">${p.included?'✓ Yes':'✗ No'}</div></div>
-        <div class="preview-meta-item"><div class="preview-meta-key">Free</div><div class="preview-meta-val">${p.is_free?'✓ Yes':'No'}</div></div>
-        <div class="preview-meta-item"><div class="preview-meta-key">Recent</div><div class="preview-meta-val">${p.is_recent?'✓ Yes':'No'}</div></div>
-      </div>
-    </div>
-
-    ${renderTagPreview('Quant Topics', p.quant_topics, 'tag-quant')}
-    ${renderTagPreview('Four-Week Topics', p.four_week_topics, 'tag-four')}
-    ${renderTagPreview('Math Approach', p.math_approach, 'tag-approach')}
-    ${renderTagPreview('Reasoning Type', p.reasoning_type, 'tag-reasoning')}
-    ${renderTagPreview('Problem Labels', p.problem_labels, 'tag-label')}
-    ${renderTagPreview('Companies', p.company_labels, 'tag-company')}
-    ${renderTagPreview('Locations', p.location_labels, 'tag-location')}
-
-    ${p.comment ? `<div class="preview-section"><div class="preview-section-label">Comment</div><div class="preview-content" style="font-size:13px;color:#aaa;">${renderLatex(p.comment)}</div></div>` : ''}
-    `;
-
-    // Trigger MathJax
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([panel]).catch(e => console.warn('MathJax error:', e));
-    }
+  ${p.comment?`<div class="prev-sec"><div class="prev-lbl">Comment</div><div class="prev-box" style="color:#aaa;font-size:12px">${renderLatex(p.comment)}</div></div>`:''}
+  `;
+  if(!prevSubKey&&subKeys.length)prevSubKey=subKeys[0];
+  if(window.MathJax&&window.MathJax.typesetPromise) window.MathJax.typesetPromise([panel]).catch(()=>{});
 }
 
-function renderTagPreview(label, arr, cls) {
-    if (!arr || !arr.length) return '';
-    return `<div class="preview-section">
-      <div class="preview-section-label">${label}</div>
-      <div class="preview-tags">${arr.map(v=>`<span class="tag ${cls}">${v}</span>`).join('')}</div>
-    </div>`;
+function renderSubPreview(sk){
+  const s=(currentProblem.subproblems||{})[sk]||{};
+  return `<div class="sub-content">
+    ${s.problem_text?`<div class="prev-sec"><div class="prev-lbl">${sk.toUpperCase()}: Problem</div><div class="prev-box">${renderLatex(s.problem_text)}</div></div>`:''}
+    ${s.correct_answer?`<div class="prev-sec"><div class="prev-lbl">Answer</div><div class="prev-box">${renderLatex(s.correct_answer)}</div></div>`:''}
+    ${s.solution&&s.solution.text?`<div class="prev-sec"><div class="prev-lbl">Solution</div><div class="prev-box sol">${renderLatex(s.solution.text)}</div></div>`:''}
+    ${s.hint?`<div class="prev-sec"><div class="prev-lbl">Hint</div><div class="prev-box">${renderLatex(s.hint)}</div></div>`:''}
+    ${(s.hints||[]).length?`<div class="prev-sec"><div class="prev-lbl">Hints</div>${(s.hints||[]).map((h,i)=>`<div class="prev-box" style="margin-bottom:4px;font-size:12px"><b>H${i+1}:</b> ${renderLatex(typeof h==='object'?h.hint_text||'':h)}</div>`).join('')}</div>`:''}
+    ${s.comment?`<div class="prev-sec"><div class="prev-lbl">Comment</div><div class="prev-box" style="color:#aaa;font-size:12px">${renderLatex(s.comment)}</div></div>`:''}
+  </div>`;
 }
 
-function renderLatex(text) {
-    if (!text) return '';
-    // Convert \par and \\ (outside math) to line breaks
-    let t = text
-        .replace(/\\par\b/g, '<br><br>')
-        .replace(/\\textbf\{([^}]+)\}/g, '<b>$1</b>')
-        .replace(/\\textit\{([^}]+)\}/g, '<i>$1</i>')
-        .replace(/\\emph\{([^}]+)\}/g, '<em>$1</em>');
-    return t;
-}
+function setPrevSub(sk){prevSubKey=sk;document.querySelectorAll('.prev-sub-tab').forEach(el=>el.classList.toggle('active',el.textContent.trim().toLowerCase()===sk));document.getElementById('sub-prev').innerHTML=renderSubPreview(sk);if(window.MathJax&&window.MathJax.typesetPromise)window.MathJax.typesetPromise([document.getElementById('sub-prev')]).catch(()=>{});}
 
-function esc(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function tagPrev(label,arr,cls){if(!arr||!arr.length)return '';return `<div class="prev-sec"><div class="prev-lbl">${label}</div><div class="prev-tags">${arr.map(v=>`<span class="tag ${cls}">${v}</span>`).join('')}</div></div>`;}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 </script>
 </body>
 </html>

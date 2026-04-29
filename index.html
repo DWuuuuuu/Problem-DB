@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quant Problem DB Editor</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/dist/umd/supabase.min.js"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+window.MathJax = {
+    tex: {
+        inlineMath: [['\\(','\\)'],['$','$']],
+        displayMath: [['\\[','\\]'],['$$','$$']],
+        processEscapes: true, processEnvironments: true,
+        packages: {'[+]': ['ams']}
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
+    loader: { load: ['[tex]/ams'] }
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;min-height:100vh;color:#e0e0e0;}
+
+/* ── Password overlay ── */
+#pw-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.pw-box{background:#16213e;border:1px solid #0f3460;border-radius:16px;padding:48px 56px;text-align:center;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.pw-box h2{font-size:22px;margin-bottom:8px;color:#e94560;}
+.pw-box p{color:#9aa0b4;margin-bottom:28px;font-size:14px;}
+.pw-box input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid #0f3460;background:#0f3460;color:#fff;font-size:16px;text-align:center;letter-spacing:4px;margin-bottom:16px;}
+.pw-box input:focus{outline:none;border-color:#e94560;}
+.pw-btn{width:100%;padding:12px;border-radius:8px;border:none;background:#e94560;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;}
+.pw-btn:hover{background:#c73652;}
+.pw-err{color:#e94560;font-size:13px;margin-top:10px;min-height:20px;}
+
+/* ── Main layout ── */
+#app{display:none;height:100vh;flex-direction:column;}
+.topbar{background:#16213e;border-bottom:1px solid #0f3460;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.topbar h1{font-size:18px;font-weight:700;color:#e94560;white-space:nowrap;}
+.topbar-info{color:#9aa0b4;font-size:13px;}
+.topbar-right{margin-left:auto;display:flex;gap:10px;align-items:center;}
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* ── Sidebar ── */
+.sidebar{width:260px;background:#16213e;border-right:1px solid #0f3460;display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-head{padding:14px;border-bottom:1px solid #0f3460;}
+.search-box{width:100%;padding:8px 12px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:13px;}
+.search-box:focus{outline:none;border-color:#e94560;}
+.filter-row{display:flex;gap:6px;margin-top:8px;}
+.filter-select{flex:1;padding:6px 8px;background:#0f3460;border:1px solid #1a4a8a;border-radius:5px;color:#e0e0e0;font-size:12px;}
+.filter-select:focus{outline:none;}
+.problem-list{flex:1;overflow-y:auto;padding:0;}
+.problem-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:.15s;}
+.problem-item:hover{background:rgba(233,69,96,.1);}
+.problem-item.active{background:rgba(233,69,96,.2);border-left:3px solid #e94560;}
+.p-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-meta{font-size:11px;color:#9aa0b4;margin-top:3px;display:flex;gap:6px;}
+.badge{padding:2px 6px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-easy{background:#1a4a2a;color:#4caf50;}
+.badge-medium{background:#4a3a10;color:#ffc107;}
+.badge-hard{background:#4a1a1a;color:#f44336;}
+.badge-very_hard{background:#2a1a4a;color:#9c27b0;}
+.badge-null{background:#2a2a3a;color:#666;}
+.badge-included{background:#1a3a4a;color:#17a2b8;}
+.badge-excluded{background:#3a1a1a;color:#888;}
+.sidebar-count{padding:10px 14px;border-top:1px solid #0f3460;font-size:12px;color:#9aa0b4;flex-shrink:0;}
+
+/* ── Editor + Preview ── */
+.content{flex:1;display:flex;overflow:hidden;}
+.editor-panel{width:50%;overflow-y:auto;padding:20px;border-right:1px solid #0f3460;}
+.preview-panel{width:50%;overflow-y:auto;padding:20px;background:#0d1117;}
+
+.section-header{font-size:12px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #0f3460;}
+.section-header:first-child{margin-top:0;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:12px;font-weight:600;color:#9aa0b4;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.form-control{width:100%;padding:10px 12px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:13px;font-family:inherit;}
+.form-control:focus{outline:none;border-color:#e94560;}
+textarea.form-control{resize:vertical;min-height:80px;font-family:'Courier New',monospace;}
+select.form-control{cursor:pointer;}
+.checkbox-row{display:flex;gap:20px;flex-wrap:wrap;}
+.checkbox-item{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
+.checkbox-item input{cursor:pointer;accent-color:#e94560;}
+
+/* Tag multi-select */
+.tag-container{background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;padding:8px;min-height:42px;display:flex;flex-wrap:wrap;gap:5px;cursor:pointer;}
+.tag-container:focus-within{border-color:#e94560;}
+.tag{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:4px;}
+.tag-quant{background:#1a3a5a;color:#64b5f6;}
+.tag-four{background:#1a4a2a;color:#81c784;}
+.tag-approach{background:#3a2a5a;color:#ce93d8;}
+.tag-reasoning{background:#4a3a1a;color:#ffcc02;}
+.tag-label{background:#3a1a3a;color:#f48fb1;}
+.tag-company{background:#1a3a4a;color:#80deea;}
+.tag-location{background:#2a3a1a;color:#a5d6a7;}
+.tag-remove{cursor:pointer;opacity:.7;font-size:12px;}
+.tag-remove:hover{opacity:1;}
+.tag-input{background:transparent;border:none;color:#e0e0e0;font-size:12px;outline:none;min-width:80px;padding:2px 4px;}
+
+/* Dropdown for tags */
+.tag-dropdown{position:absolute;background:#16213e;border:1px solid #0f3460;border-radius:6px;max-height:200px;overflow-y:auto;z-index:100;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.tag-option{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.tag-option:hover{background:rgba(233,69,96,.15);}
+.tag-option.selected{color:#e94560;}
+.tag-wrapper{position:relative;}
+
+/* Buttons */
+.btn{padding:8px 18px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-save{background:#e94560;color:#fff;}
+.btn-save:hover{background:#c73652;}
+.btn-save:disabled{background:#555;cursor:not-allowed;}
+.btn-ghost{background:rgba(255,255,255,.07);color:#e0e0e0;border:1px solid rgba(255,255,255,.1);}
+.btn-ghost:hover{background:rgba(255,255,255,.12);}
+.btn-danger{background:#c0392b;color:#fff;}
+.btn-danger:hover{background:#a93226;}
+.save-row{display:flex;gap:10px;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid #0f3460;}
+.save-status{font-size:13px;color:#4caf50;}
+.save-error{font-size:13px;color:#e94560;}
+
+/* Preview styles */
+.preview-title{font-size:16px;font-weight:700;color:#e94560;margin-bottom:16px;}
+.preview-section{margin-bottom:20px;}
+.preview-section-label{font-size:11px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.preview-content{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px;line-height:1.7;font-size:14px;}
+.preview-content.solution-bg{background:#0a1a2a;border-color:#1a4a8a;}
+.preview-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.preview-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.preview-meta-item{background:#16213e;border:1px solid #0f3460;border-radius:6px;padding:8px 12px;}
+.preview-meta-key{font-size:10px;color:#9aa0b4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.preview-meta-val{font-size:13px;color:#e0e0e0;}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;height:200px;color:#9aa0b4;font-size:14px;}
+.spinner{width:20px;height:20px;border:2px solid #0f3460;border-top-color:#e94560;border-radius:50%;animation:spin .7s linear infinite;margin-right:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#0f3460;}
+::-webkit-scrollbar-thumb{background:#e94560;border-radius:3px;}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:#9aa0b4;gap:12px;}
+.empty-state svg{opacity:.3;}
+</style>
+</head>
+<body>
+
+<!-- Password overlay -->
+<div id="pw-overlay">
+  <div class="pw-box">
+    <h2>🔐 Admin Access</h2>
+    <p>Quant Problem Database Editor</p>
+    <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')tryLogin()">
+    <button class="pw-btn" onclick="tryLogin()">Unlock</button>
+    <div class="pw-err" id="pw-err"></div>
+  </div>
+</div>
+
+<!-- Main app -->
+<div id="app" style="display:none;flex-direction:column;height:100vh;">
+  <div class="topbar">
+    <h1>⚡ Quant DB Editor</h1>
+    <span class="topbar-info" id="db-info">Loading…</span>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="loadProblems()">↺ Refresh</button>
+      <button class="btn btn-ghost" style="color:#e94560;" onclick="logout()">Lock</button>
+    </div>
+  </div>
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-head">
+        <input class="search-box" type="text" id="search-input" placeholder="Search problems…" oninput="renderList()">
+        <div class="filter-row">
+          <select class="filter-select" id="filter-company" onchange="renderList()">
+            <option value="">All companies</option>
+          </select>
+          <select class="filter-select" id="filter-difficulty" onchange="renderList()">
+            <option value="">All difficulties</option>
+            <option>easy</option><option>medium</option><option>hard</option><option>very_hard</option>
+          </select>
+        </div>
+      </div>
+      <div class="problem-list" id="problem-list"></div>
+      <div class="sidebar-count" id="sidebar-count"></div>
+    </div>
+
+    <!-- Editor + Preview -->
+    <div class="content">
+      <div class="editor-panel" id="editor-panel">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="#9aa0b4"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+          <span>Select a problem to edit</span>
+        </div>
+      </div>
+      <div class="preview-panel" id="preview-panel">
+        <div class="empty-state"><span style="color:#9aa0b4">Preview will appear here</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ──
+const SUPABASE_URL = 'https://qcohkjqflitxibplftcw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjb2hranFmbGl0eGlicGxmdGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzQzOTEsImV4cCI6MjA5MzAxMDM5MX0.hHtZ5PMQU-wdJtvJ4S3-xfT9XwQ1ZHuqUuiuHraKBRg';
+// Password: quant2026  (change by updating this base64 value: btoa('yourpassword'))
+const ADMIN_PASSWORD_HASH = 'cXVhbnQyMDI2';
+
+const DIFFICULTIES = ['easy','medium','hard','very_hard'];
+const MATH_APPROACHES = ['algebraic','geometric','analytic','computational','probabilistic','combinatorial','symmetric','approximation','statistical','inductive','contradiction','constructive'];
+const REASONING_TYPES = ['conceptual','computational','application-based','proof-based','estimation'];
+const PROBLEM_LABELS = ['must-do','conceptual','frequently-tested','hard','tricky','elegant'];
+const COMPANIES = ['Citadel','Citadel Securities','HRT','Two Sigma','Squarepoint','Point72','Cubist','SIG','Jane Street','Jump Trading','DE Shaw','Five Rings','Millennium','WorldQuant','Voleon Group','IMC Trading','Barclays'];
+const LOCATIONS = ['US','UK','Europe','Hong Kong','Singapore','China'];
+const QUANT_TOPICS = ['Induction','Logical Reasoning','Symmetry','Series','Pigeon Principle','Problem Simplification','Modular Arithmetic','Proof by Contradiction','Calculus Methods','Vector Geometry','Determinant and Rank','Eigenvalues and Eigenvectors','Positive Semi-Definiteness (PSD)','Quadratic Forms','QR Decompositions','SVD Decomposition','LU and Cholesky Decompositions','Principle Component Analysis (PCA)','Probability Modeling','Counting','Geometric Probability','Combinatorial Probability','Inclusion and Exclusion Principle','Conditional Probability and Bayesian Law','Expectation and Variance','Covariance and Correlation','Uniform Distribution','Geometric Distribution','Exponential Distribution','Poisson Distribution','(Multivariate) Gaussian Distributions','Linearity of Expectations','Order Statistics','Max and Min','Applications of Symmetry','Markov Chain','Martingale','Random Walk','Brownian Motion','Stochastic Calculus','Poisson Processes','Dynamical Programming','Coin Flipping','Dice Rolling','Game Theory','Estimators','Sampling Distribution','Bias-Variance','Likelihood','Bayesian Inference','Law of Large Numbers (LLN)','Central Limit Theorem (CLT)','Rejection Sampling','Uniform Sampling','Hypothesis Testing','Linear Regression','Ridge and Lasso Regression','Logistic Regression','Quantile Regression','Maximum Likelihood Estimate (MLE)','Time Series Analysis','Monte Carlo','Information Theory','Games','Randomization Strategy','Bidding','Optimization','Numerical Methods','Algorithms and Data Structures','Approximation','Paradox','Factorials','Number Theory','Prime Number','Permutations','Combinations','Harmonic Number','Cards','Binomial Distribution','Bernoulli Distribution','Brain Teasers','Recursion','Inequalities (Estimate)','Nash Equilibrium','Optimal Strategy','Pigeonhole Principle','Sharpe Ratio','Finance'];
+const FOUR_WEEK_TOPICS = ['Foundations of Probability Modeling','Conditional Probability','Distributions','Gaussian Distribution','Expectation & Variance','Covariance & Correlation','Miscellaneous Topics','Markov Chains','Martingales & Random Walks','Dynamic Programming','CLT & Law of Large Numbers','Hypothesis Testing','Linear Regression I','Linear Regression II','Time Series Basics','Monte Carlo Methods','Nash Equilibrium','Bayesian Games','Number Theory and Mental Math','Brain Teasers','Options Pricing and Black-Scholes'];
+
+// ── State ──
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let allProblems = [];
+let currentProblem = null;
+let filteredProblems = [];
+let openDropdown = null;
+
+// ── Auth ──
+function tryLogin() {
+    const val = document.getElementById('pw-input').value;
+    if (btoa(val) === ADMIN_PASSWORD_HASH) {
+        document.getElementById('pw-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadProblems();
+    } else {
+        document.getElementById('pw-err').textContent = 'Incorrect password.';
+        document.getElementById('pw-input').value = '';
+    }
+}
+function logout() {
+    document.getElementById('pw-overlay').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-err').textContent = '';
+}
+
+// ── Load ──
+async function loadProblems() {
+    document.getElementById('db-info').textContent = 'Loading…';
+    document.getElementById('problem-list').innerHTML = '<div class="loading"><div class="spinner"></div>Loading problems…</div>';
+    const { data, error } = await db.from('problems').select('*').order('id');
+    if (error) { document.getElementById('db-info').textContent = 'Error: ' + error.message; return; }
+    allProblems = data;
+    document.getElementById('db-info').textContent = `${data.length} problems loaded`;
+    populateCompanyFilter();
+    renderList();
+}
+
+function populateCompanyFilter() {
+    const sel = document.getElementById('filter-company');
+    const companies = new Set();
+    allProblems.forEach(p => (p.company_labels||[]).forEach(c => companies.add(c)));
+    sel.innerHTML = '<option value="">All companies</option>';
+    [...companies].sort().forEach(c => {
+        const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+    });
+}
+
+// ── Render list ──
+function renderList() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const company = document.getElementById('filter-company').value;
+    const diff = document.getElementById('filter-difficulty').value;
+
+    filteredProblems = allProblems.filter(p => {
+        if (q && !(p.problem_name||'').toLowerCase().includes(q) && !(p.id||'').toLowerCase().includes(q) && !(p.problem_text||'').toLowerCase().includes(q)) return false;
+        if (company && !(p.company_labels||[]).includes(company)) return false;
+        if (diff && p.difficulty !== diff) return false;
+        return true;
+    });
+
+    const list = document.getElementById('problem-list');
+    list.innerHTML = '';
+    filteredProblems.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'problem-item' + (currentProblem && currentProblem.id === p.id ? ' active' : '');
+        el.dataset.id = p.id;
+        const diffBadge = `<span class="badge badge-${p.difficulty||'null'}">${p.difficulty||'—'}</span>`;
+        const incBadge = `<span class="badge ${p.included ? 'badge-included' : 'badge-excluded'}">${p.included ? '✓' : '✗'}</span>`;
+        el.innerHTML = `<div class="p-name">${p.problem_name || p.id}</div><div class="p-meta">${diffBadge}${incBadge}<span style="color:#555">${(p.company_labels||[]).join(', ')}</span></div>`;
+        el.onclick = () => selectProblem(p);
+        list.appendChild(el);
+    });
+    document.getElementById('sidebar-count').textContent = `${filteredProblems.length} / ${allProblems.length} problems`;
+}
+
+// ── Select problem ──
+function selectProblem(p) {
+    currentProblem = JSON.parse(JSON.stringify(p)); // deep copy
+    document.querySelectorAll('.problem-item').forEach(el => el.classList.toggle('active', el.dataset.id === p.id));
+    renderEditor();
+    renderPreview();
+}
+
+// ── Render editor ──
+function renderEditor() {
+    const p = currentProblem;
+    const panel = document.getElementById('editor-panel');
+    panel.innerHTML = `
+    <div class="section-header">Identity</div>
+    <div class="form-group">
+      <label class="form-label">ID</label>
+      <input class="form-control" value="${esc(p.id)}" readonly style="opacity:.5;cursor:default;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Doc ID</label>
+      <input class="form-control" id="f-doc_id" value="${esc(p.doc_id||'')}" oninput="patch('doc_id',this.value)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Problem Name</label>
+      <input class="form-control" id="f-problem_name" value="${esc(p.problem_name||'')}" oninput="patch('problem_name',this.value)">
+    </div>
+
+    <div class="section-header">Content</div>
+    <div class="form-group">
+      <label class="form-label">Problem Text (LaTeX)</label>
+      <textarea class="form-control" id="f-problem_text" rows="6" oninput="patch('problem_text',this.value);debouncePreview()">${esc(p.problem_text||'')}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Correct Answer</label>
+      <textarea class="form-control" id="f-correct_answer" rows="3" oninput="patch('correct_answer',this.value)">${esc(p.correct_answer||'')}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Solution Text (LaTeX)</label>
+      <textarea class="form-control" id="f-solution_text" rows="8" oninput="patchSolution(this.value);debouncePreview()">${esc(getSolutionText(p))}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Hint</label>
+      <textarea class="form-control" id="f-hint" rows="2" oninput="patch('hint',this.value)">${esc(p.hint||'')}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Comment</label>
+      <textarea class="form-control" id="f-comment" rows="3" oninput="patch('comment',this.value)">${esc(p.comment||'')}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keyword</label>
+      <textarea class="form-control" id="f-keyword" rows="2" oninput="patch('keyword',this.value)">${esc(p.keyword||'')}</textarea>
+    </div>
+
+    <div class="section-header">Classification</div>
+    <div class="form-group">
+      <label class="form-label">Difficulty</label>
+      <select class="form-control" id="f-difficulty" onchange="patch('difficulty',this.value||null)">
+        <option value="" ${!p.difficulty?'selected':''}>— None —</option>
+        ${DIFFICULTIES.map(d=>`<option value="${d}" ${p.difficulty===d?'selected':''}>${d}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Importance (1–3)</label>
+      <input class="form-control" type="number" id="f-importance" min="1" max="3" value="${p.importance||''}" oninput="patch('importance',this.value?parseInt(this.value):null)" style="width:120px;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Version</label>
+      <input class="form-control" id="f-version" value="${esc(p.version||'')}" oninput="patch('version',this.value)" style="width:120px;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Flags</label>
+      <div class="checkbox-row">
+        <label class="checkbox-item"><input type="checkbox" id="f-included" ${p.included?'checked':''} onchange="patch('included',this.checked)"> Included</label>
+        <label class="checkbox-item"><input type="checkbox" id="f-is_free" ${p.is_free?'checked':''} onchange="patch('is_free',this.checked)"> Free</label>
+        <label class="checkbox-item"><input type="checkbox" id="f-is_recent" ${p.is_recent?'checked':''} onchange="patch('is_recent',this.checked)"> Recent</label>
+      </div>
+    </div>
+
+    <div class="section-header">Topics & Labels</div>
+    ${renderTagField('quant_topics', 'Quant Topics', QUANT_TOPICS, 'tag-quant')}
+    ${renderTagField('four_week_topics', 'Four-Week Topics', FOUR_WEEK_TOPICS, 'tag-four')}
+    ${renderTagField('math_approach', 'Math Approach', MATH_APPROACHES, 'tag-approach')}
+    ${renderTagField('reasoning_type', 'Reasoning Type', REASONING_TYPES, 'tag-reasoning')}
+    ${renderTagField('problem_labels', 'Problem Labels', PROBLEM_LABELS, 'tag-label')}
+    ${renderTagField('company_labels', 'Company Labels', COMPANIES, 'tag-company')}
+    ${renderTagField('location_labels', 'Location Labels', LOCATIONS, 'tag-location')}
+
+    <div class="save-row">
+      <button class="btn btn-save" id="save-btn" onclick="saveProblem()">💾 Save to Database</button>
+      <span class="save-status" id="save-status"></span>
+    </div>`;
+}
+
+function renderTagField(field, label, options, tagClass) {
+    const vals = currentProblem[field] || [];
+    const tagsHtml = vals.map(v =>
+        `<span class="tag ${tagClass}">${v}<span class="tag-remove" onclick="removeTag('${field}','${v.replace(/'/g,"\\'")}')">×</span></span>`
+    ).join('');
+    return `
+    <div class="form-group">
+      <label class="form-label">${label}</label>
+      <div class="tag-wrapper">
+        <div class="tag-container" onclick="toggleDropdown('${field}',event)">
+          ${tagsHtml}
+          <input class="tag-input" placeholder="+ add" id="tag-input-${field}" oninput="filterDropdown('${field}',this.value)" onclick="event.stopPropagation();showDropdown('${field}')">
+        </div>
+        <div class="tag-dropdown" id="dd-${field}" style="display:none;"></div>
+      </div>
+    </div>`;
+}
+
+// ── Tag management ──
+function toggleDropdown(field, e) {
+    e.stopPropagation();
+    const dd = document.getElementById('dd-'+field);
+    if (dd.style.display === 'none') showDropdown(field);
+    else hideDropdown(field);
+}
+function showDropdown(field) {
+    if (openDropdown && openDropdown !== field) hideDropdown(openDropdown);
+    openDropdown = field;
+    filterDropdown(field, document.getElementById('tag-input-'+field).value);
+    document.getElementById('dd-'+field).style.display = 'block';
+}
+function hideDropdown(field) {
+    const dd = document.getElementById('dd-'+field);
+    if (dd) dd.style.display = 'none';
+    openDropdown = null;
+}
+function filterDropdown(field, q) {
+    const optMap = {quant_topics:QUANT_TOPICS,four_week_topics:FOUR_WEEK_TOPICS,math_approach:MATH_APPROACHES,reasoning_type:REASONING_TYPES,problem_labels:PROBLEM_LABELS,company_labels:COMPANIES,location_labels:LOCATIONS};
+    const options = optMap[field] || [];
+    const current = currentProblem[field] || [];
+    const qLower = (q||'').toLowerCase();
+    const filtered = options.filter(o => !qLower || o.toLowerCase().includes(qLower));
+    const dd = document.getElementById('dd-'+field);
+    dd.innerHTML = filtered.map(o => {
+        const sel = current.includes(o);
+        return `<div class="tag-option ${sel?'selected':''}" onclick="toggleTag('${field}','${o.replace(/'/g,"\\'")}',event)">${sel?'✓ ':''} ${o}</div>`;
+    }).join('') || '<div style="padding:8px 12px;color:#9aa0b4;font-size:12px;">No options</div>';
+}
+function toggleTag(field, value, e) {
+    if (e) e.stopPropagation();
+    const arr = [...(currentProblem[field] || [])];
+    const idx = arr.indexOf(value);
+    if (idx >= 0) arr.splice(idx, 1); else arr.push(value);
+    currentProblem[field] = arr;
+    // Re-render just the tag container
+    const container = document.getElementById('dd-'+field).previousElementSibling;
+    const tagClass = {quant_topics:'tag-quant',four_week_topics:'tag-four',math_approach:'tag-approach',reasoning_type:'tag-reasoning',problem_labels:'tag-label',company_labels:'tag-company',location_labels:'tag-location'}[field];
+    const input = container.querySelector('.tag-input');
+    const inputVal = input ? input.value : '';
+    container.innerHTML = arr.map(v =>
+        `<span class="tag ${tagClass}">${v}<span class="tag-remove" onclick="removeTag('${field}','${v.replace(/'/g,"\\'")}')">×</span></span>`
+    ).join('') + `<input class="tag-input" placeholder="+ add" id="tag-input-${field}" oninput="filterDropdown('${field}',this.value)" onclick="event.stopPropagation();showDropdown('${field}')" value="${inputVal}">`;
+    filterDropdown(field, inputVal);
+}
+function removeTag(field, value) {
+    toggleTag(field, value, null);
+}
+document.addEventListener('click', () => { if (openDropdown) hideDropdown(openDropdown); });
+
+// ── Patch helpers ──
+function patch(field, value) { currentProblem[field] = value; }
+function patchSolution(text) {
+    if (!currentProblem.solution) currentProblem.solution = {text:'',images:[]};
+    currentProblem.solution.text = text;
+}
+function getSolutionText(p) { return (p.solution && p.solution.text) ? p.solution.text : ''; }
+
+// ── Save ──
+async function saveProblem() {
+    const btn = document.getElementById('save-btn');
+    const status = document.getElementById('save-status');
+    btn.disabled = true; btn.textContent = '⏳ Saving…';
+    status.className = 'save-status'; status.textContent = '';
+
+    const row = { ...currentProblem };
+    // updated_at to now
+    row.updated_at = new Date().toISOString().replace('T',' ').substring(0,19);
+
+    const { error } = await db.from('problems').upsert(row, { onConflict: 'id' });
+    btn.disabled = false; btn.innerHTML = '💾 Save to Database';
+    if (error) {
+        status.className = 'save-error'; status.textContent = '✗ ' + error.message;
+    } else {
+        status.className = 'save-status'; status.textContent = '✓ Saved';
+        // Update allProblems cache
+        const idx = allProblems.findIndex(p => p.id === row.id);
+        if (idx >= 0) allProblems[idx] = { ...row };
+        renderList();
+        setTimeout(() => { status.textContent = ''; }, 3000);
+    }
+}
+
+// ── Preview ──
+let previewTimer = null;
+function debouncePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 600); }
+
+function renderPreview() {
+    const p = currentProblem;
+    const panel = document.getElementById('preview-panel');
+    const solText = getSolutionText(p);
+    panel.innerHTML = `
+    <div class="preview-title">${escHtml(p.problem_name || p.id)}</div>
+
+    <div class="preview-section">
+      <div class="preview-section-label">Problem</div>
+      <div class="preview-content" id="prev-problem">${renderLatex(p.problem_text||'<em style="color:#555">No problem text</em>')}</div>
+    </div>
+
+    ${p.correct_answer ? `
+    <div class="preview-section">
+      <div class="preview-section-label">Answer</div>
+      <div class="preview-content">${renderLatex(p.correct_answer)}</div>
+    </div>` : ''}
+
+    ${solText ? `
+    <div class="preview-section">
+      <div class="preview-section-label">Solution</div>
+      <div class="preview-content solution-bg">${renderLatex(solText)}</div>
+    </div>` : ''}
+
+    <div class="preview-section">
+      <div class="preview-section-label">Metadata</div>
+      <div class="preview-meta-grid">
+        <div class="preview-meta-item"><div class="preview-meta-key">Difficulty</div><div class="preview-meta-val">${p.difficulty||'—'}</div></div>
+        <div class="preview-meta-item"><div class="preview-meta-key">Importance</div><div class="preview-meta-val">${p.importance||'—'}</div></div>
+        <div class="preview-meta-item"><div class="preview-meta-key">Version</div><div class="preview-meta-val">${p.version||'—'}</div></div>
+        <div class="preview-meta-item"><div class="preview-meta-key">Included</div><div class="preview-meta-val">${p.included?'✓ Yes':'✗ No'}</div></div>
+        <div class="preview-meta-item"><div class="preview-meta-key">Free</div><div class="preview-meta-val">${p.is_free?'✓ Yes':'No'}</div></div>
+        <div class="preview-meta-item"><div class="preview-meta-key">Recent</div><div class="preview-meta-val">${p.is_recent?'✓ Yes':'No'}</div></div>
+      </div>
+    </div>
+
+    ${renderTagPreview('Quant Topics', p.quant_topics, 'tag-quant')}
+    ${renderTagPreview('Four-Week Topics', p.four_week_topics, 'tag-four')}
+    ${renderTagPreview('Math Approach', p.math_approach, 'tag-approach')}
+    ${renderTagPreview('Reasoning Type', p.reasoning_type, 'tag-reasoning')}
+    ${renderTagPreview('Problem Labels', p.problem_labels, 'tag-label')}
+    ${renderTagPreview('Companies', p.company_labels, 'tag-company')}
+    ${renderTagPreview('Locations', p.location_labels, 'tag-location')}
+
+    ${p.comment ? `<div class="preview-section"><div class="preview-section-label">Comment</div><div class="preview-content" style="font-size:13px;color:#aaa;">${renderLatex(p.comment)}</div></div>` : ''}
+    `;
+
+    // Trigger MathJax
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([panel]).catch(e => console.warn('MathJax error:', e));
+    }
+}
+
+function renderTagPreview(label, arr, cls) {
+    if (!arr || !arr.length) return '';
+    return `<div class="preview-section">
+      <div class="preview-section-label">${label}</div>
+      <div class="preview-tags">${arr.map(v=>`<span class="tag ${cls}">${v}</span>`).join('')}</div>
+    </div>`;
+}
+
+function renderLatex(text) {
+    if (!text) return '';
+    // Convert \par and \\ (outside math) to line breaks
+    let t = text
+        .replace(/\\par\b/g, '<br><br>')
+        .replace(/\\textbf\{([^}]+)\}/g, '<b>$1</b>')
+        .replace(/\\textit\{([^}]+)\}/g, '<i>$1</i>')
+        .replace(/\\emph\{([^}]+)\}/g, '<em>$1</em>');
+    return t;
+}
+
+function esc(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

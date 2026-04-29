@@ -183,6 +183,7 @@ select.fc{cursor:pointer;}
     <span class="topbar-info" id="db-info">Loading…</span>
     <div class="topbar-right">
       <button class="btn btn-ghost" onclick="loadProblems()">↺ Refresh</button>
+      <button class="btn btn-add" onclick="newProblem()">＋ New Problem</button>
       <button class="btn btn-ghost" style="color:#e94560" onclick="logout()">Lock</button>
     </div>
   </div>
@@ -524,6 +525,60 @@ function patchSub(sk,field,val){
   currentProblem.subproblems[sk][field]=val;
 }
 
+// ── New / Exclude problem ──
+function getNextQIFId(){
+  const prefix='quant_interview_fundamental_qdsi_p';
+  let max=0;
+  allProblems.forEach(p=>{
+    if(p.id&&p.id.startsWith(prefix)){
+      const n=parseInt(p.id.slice(prefix.length));
+      if(!isNaN(n)&&n>max)max=n;
+    }
+  });
+  return prefix+(max+1);
+}
+
+function newProblem(){
+  const newId=getNextQIFId();
+  currentProblem={
+    id:newId, doc_id:'', problem_name:'', problem_text:'', correct_answer:'',
+    solution:{text:'',images:[]}, solutions:[], hint:'', hints:[],
+    comment:'', keyword:'', difficulty:null, importance:null, version:'v1',
+    included:true, is_free:false, is_recent:false,
+    subproblems:{}, topics:[], quant_topics:[], four_week_topics:[],
+    math_approach:[], reasoning_type:[], problem_labels:[],
+    company_labels:[], location_labels:[], images:[], updated_at:null
+  };
+  currentSubKey=null;
+  document.querySelectorAll('.problem-item').forEach(el=>el.classList.remove('active'));
+  renderEditor();
+  renderPreview();
+  // Scroll editor to top
+  document.getElementById('editor-panel').scrollTop=0;
+}
+
+async function excludeProblem(){
+  const wasIncluded=currentProblem.included;
+  currentProblem.included=!wasIncluded;
+  const st=document.getElementById('save-st');
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;st.className='';st.textContent='';
+  const row={...currentProblem,updated_at:new Date().toISOString().replace('T',' ').slice(0,19)};
+  const {error}=await db.from('problems').upsert(row,{onConflict:'id'});
+  btn.disabled=false;
+  if(error){
+    currentProblem.included=wasIncluded; // revert
+    st.className='save-err';st.textContent='✗ '+error.message;
+  } else {
+    const i=allProblems.findIndex(p=>p.id===row.id);
+    if(i>=0)allProblems[i]={...row};
+    renderList();
+    renderEditor(); // refresh button label
+    st.className='save-ok';st.textContent=currentProblem.included?'✓ Re-included':'✓ Excluded';
+    setTimeout(()=>st.textContent='',3000);
+  }
+}
+
 // ── Render editor ──
 function renderEditor(){
   const p=currentProblem;
@@ -575,6 +630,7 @@ function renderEditor(){
 
   <div class="save-row">
     <button class="btn btn-red" id="save-btn" onclick="saveProblem()">💾 Save to Database</button>
+    <button class="btn btn-del" onclick="excludeProblem()" title="Mark as excluded (sets Included = false and saves)">${p.included?'✕ Exclude':'✓ Re-include'}</button>
     <span id="save-st"></span>
   </div>`;
 }

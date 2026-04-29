@@ -92,6 +92,8 @@ select.fc{cursor:pointer;}
 .btn-ghost:hover{background:rgba(255,255,255,.13);}
 .btn-add{background:rgba(78,205,130,.12);color:#4ecd82;border:1px solid rgba(78,205,130,.3);}
 .btn-add:hover{background:rgba(78,205,130,.2);}
+.btn-add-sol{background:rgba(100,180,255,.12);color:#64b4ff;border:1px solid rgba(100,180,255,.3);}
+.btn-add-sol:hover{background:rgba(100,180,255,.2);}
 .btn-del{background:rgba(233,69,96,.1);color:#e94560;border:1px solid rgba(233,69,96,.3);}
 .btn-del:hover{background:rgba(233,69,96,.2);}
 .save-row{display:flex;gap:10px;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid #0f3460;}
@@ -118,7 +120,13 @@ select.fc{cursor:pointer;}
 .hint-list{display:flex;flex-direction:column;gap:6px;}
 .hint-item{display:flex;gap:6px;align-items:flex-start;}
 .hint-item textarea{flex:1;min-height:50px;}
-.hint-num{font-size:11px;color:#9aa0b4;padding-top:10px;white-space:nowrap;}
+.hint-num{font-size:11px;font-weight:700;color:#9aa0b4;padding-top:10px;white-space:nowrap;min-width:24px;}
+
+/* Solutions */
+.sol-list{display:flex;flex-direction:column;gap:8px;}
+.sol-item{display:flex;gap:6px;align-items:flex-start;}
+.sol-item textarea{flex:1;min-height:80px;}
+.sol-num{font-size:11px;font-weight:700;color:#64b4ff;padding-top:10px;white-space:nowrap;min-width:24px;}
 
 /* Subproblems */
 .sub-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
@@ -134,7 +142,10 @@ select.fc{cursor:pointer;}
 .prev-sec{margin-bottom:16px;}
 .prev-lbl{font-size:10px;font-weight:700;color:#9aa0b4;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
 .prev-box{background:#16213e;border:1px solid #0f3460;border-radius:7px;padding:12px;line-height:1.75;font-size:13px;}
-.prev-box.sol{background:#0a1a2a;border-color:#1a4a8a;}
+.prev-box.sol{background:#0a1a2a;border-color:#1a3a6a;}
+.prev-box.hint-box{background:#0d1a10;border-color:#1a4a2a;}
+.prev-sol-num{font-size:10px;font-weight:700;color:#64b4ff;margin-bottom:4px;}
+.prev-hint-num{font-size:10px;font-weight:700;color:#4ecd82;margin-bottom:4px;}
 .prev-tags{display:flex;flex-wrap:wrap;gap:4px;}
 .prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
 .prev-cell{background:#16213e;border:1px solid #0f3460;border-radius:6px;padding:7px 10px;}
@@ -207,7 +218,7 @@ const ADMIN_HASH = 'cXVhbnQyMDI2';
 const DIFFICULTIES = ['easy','medium','hard','very_hard'];
 const MATH_APPROACHES = ['algebraic','geometric','analytic','computational','probabilistic','combinatorial','symmetric','approximation','statistical','inductive','contradiction','constructive'];
 const REASONING_TYPES = ['conceptual','computational','application-based','proof-based','estimation'];
-const PROBLEM_LABELS = ['must-do','conceptual','frequently-tested','hard','tricky','elegant'];
+const PROBLEM_LABELS = ['must-do','conceptual','frequently-tested','hard','tricky','elegant','multiple solution paths','mental math','15 seconds math','30 seconds math','45 seconds math','open-ended'];
 const COMPANIES = ['Citadel','Citadel Securities','HRT','Two Sigma','Squarepoint','Point72','Cubist','SIG','Jane Street','Jump Trading','DE Shaw','Five Rings','Millennium','WorldQuant','Voleon Group','IMC Trading','Barclays'];
 const LOCATIONS = ['US','UK','Europe','Hong Kong','Singapore','China'];
 const QUANT_TOPICS = ['Induction','Logical Reasoning','Symmetry','Series','Pigeon Principle','Problem Simplification','Modular Arithmetic','Proof by Contradiction','Calculus Methods','Vector Geometry','Determinant and Rank','Eigenvalues and Eigenvectors','Positive Semi-Definiteness (PSD)','Quadratic Forms','QR Decompositions','SVD Decomposition','LU and Cholesky Decompositions','Principle Component Analysis (PCA)','Probability Modeling','Counting','Geometric Probability','Combinatorial Probability','Inclusion and Exclusion Principle','Conditional Probability and Bayesian Law','Expectation and Variance','Covariance and Correlation','Uniform Distribution','Geometric Distribution','Exponential Distribution','Poisson Distribution','(Multivariate) Gaussian Distributions','Linearity of Expectations','Order Statistics','Max and Min','Applications of Symmetry','Markov Chain','Martingale','Random Walk','Brownian Motion','Stochastic Calculus','Poisson Processes','Dynamical Programming','Coin Flipping','Dice Rolling','Game Theory','Estimators','Sampling Distribution','Bias-Variance','Likelihood','Bayesian Inference','Law of Large Numbers (LLN)','Central Limit Theorem (CLT)','Rejection Sampling','Uniform Sampling','Hypothesis Testing','Linear Regression','Ridge and Lasso Regression','Logistic Regression','Quantile Regression','Maximum Likelihood Estimate (MLE)','Time Series Analysis','Monte Carlo','Information Theory','Games','Randomization Strategy','Bidding','Optimization','Numerical Methods','Algorithms and Data Structures','Approximation','Paradox','Factorials','Number Theory','Prime Number','Permutations','Combinations','Harmonic Number','Cards','Binomial Distribution','Bernoulli Distribution','Brain Teasers','Recursion','Inequalities (Estimate)','Nash Equilibrium','Optimal Strategy','Pigeonhole Principle','Sharpe Ratio','Finance'];
@@ -277,8 +288,48 @@ function renderList(){
   document.getElementById('s-count').textContent=`${filtered.length} / ${allProblems.length}`;
 }
 
+// ── Migrate hint → hints[0] on load ──
+function migrateHints(p){
+  // Main problem: if hint field has content and hints array is empty, move it
+  if(p.hint && p.hint.trim() && (!p.hints || p.hints.length===0)){
+    p.hints=[{hint_text:p.hint.trim(),hint_order:0}];
+    p.hint='';
+  }
+  if(!p.hints) p.hints=[];
+  // Subproblems
+  if(p.subproblems){
+    Object.values(p.subproblems).forEach(s=>{
+      if(s.hint && s.hint.trim() && (!s.hints || s.hints.length===0)){
+        s.hints=[{hint_text:s.hint.trim(),hint_order:0}];
+        s.hint='';
+      }
+      if(!s.hints) s.hints=[];
+    });
+  }
+}
+
+// ── Migrate solution → solutions[0] on load ──
+function migrateSolutions(p){
+  // Main problem
+  if(!p.solutions || p.solutions.length===0){
+    const txt = p.solution && p.solution.text ? p.solution.text : '';
+    p.solutions = txt ? [{text:txt,images:[]}] : [];
+  }
+  // Subproblems
+  if(p.subproblems){
+    Object.values(p.subproblems).forEach(s=>{
+      if(!s.solutions || s.solutions.length===0){
+        const txt = s.solution && s.solution.text ? s.solution.text : '';
+        s.solutions = txt ? [{text:txt,images:[]}] : [];
+      }
+    });
+  }
+}
+
 function selectProblem(p){
   currentProblem=JSON.parse(JSON.stringify(p));
+  migrateHints(currentProblem);
+  migrateSolutions(currentProblem);
   currentSubKey=null;
   document.querySelectorAll('.problem-item').forEach(el=>el.classList.toggle('active',el.dataset.id===p.id));
   renderEditor();
@@ -348,7 +399,6 @@ function toggleDD(id,e){e.stopPropagation();const dd=document.getElementById('dd
 function showDD(id){if(openDropdown&&openDropdown!==id)hideDD(openDropdown);openDropdown=id;filterDD(id,document.getElementById('ti-'+id)?.value||'');document.getElementById('dd-'+id).style.display='block';}
 function hideDD(id){const dd=document.getElementById('dd-'+id);if(dd)dd.style.display='none';openDropdown=null;}
 function filterDD(id,q){
-  // id is either a field name or subKey_field
   let field,subKey;
   const parts=id.match(/^(.+)_(quant_topics|four_week_topics|math_approach|reasoning_type|problem_labels|company_labels|location_labels)$/);
   if(parts){subKey=parts[1];field=parts[2];}else{field=id;}
@@ -388,7 +438,6 @@ function reRenderTagBox(id,subKey){
   if(!box)return;
   const inp=box.querySelector('.t-inp');
   const inputVal=inp?inp.value:'';
-  const removeFn=subKey?`removeSubTag('${subKey}','${field}',v)`:`removeTag('${field}',v)`;
   box.innerHTML=vals.map(v=>`<span class="tag ${cls}">${v}<span class="trm" onclick="removeTag_helper('${id.replace(/'/g,"\\'")}','${v.replace(/'/g,"\\'")}')">×</span></span>`).join('')+`<input class="t-inp" id="ti-${id}" placeholder="+ add" oninput="filterDD('${id}',this.value)" onclick="event.stopPropagation();showDD('${id}')" value="${inputVal}">`;
   filterDD(id,inputVal);
 }
@@ -398,17 +447,21 @@ function removeTag_helper(id,val){
 }
 document.addEventListener('click',()=>{if(openDropdown)hideDD(openDropdown);});
 
-// ── Hints helpers ──
-function renderHintsList(hints,updateFn,addFn,removeFn){
-  const arr=hints||[];
-  return `<div class="hint-list" id="hl-${addFn.replace(/[^a-z]/gi,'_')}">
-    ${arr.map((h,i)=>`<div class="hint-item"><span class="hint-num">H${i+1}</span><textarea class="fc" rows="2" oninput="${updateFn}(${i},this.value)">${esc(typeof h==='object'?h.hint_text||'':h)}</textarea><button class="btn btn-del" onclick="${removeFn}(${i})" style="flex-shrink:0">✕</button></div>`).join('')}
+// ── Hints helpers (unified H1, H2... list) ──
+function renderHintsList(hints, updateFn, addFn, removeFn){
+  const arr = hints || [];
+  return `<div class="hint-list">
+    ${arr.map((h,i)=>`<div class="hint-item">
+      <span class="hint-num">H${i+1}</span>
+      <textarea class="fc" rows="2" oninput="${updateFn}(${i},this.value)">${esc(typeof h==='object'?h.hint_text||'':h)}</textarea>
+      <button class="btn btn-del" onclick="${removeFn}(${i})" style="flex-shrink:0;padding:5px 8px">✕</button>
+    </div>`).join('')}
   </div>
   <button class="btn btn-add" style="margin-top:5px" onclick="${addFn}()">+ Add Hint</button>`;
 }
 
 // Main problem hints
-function updateHint(i,v){const hints=currentProblem.hints||[];if(typeof hints[i]==='object')hints[i].hint_text=v;else hints[i]=v;currentProblem.hints=hints;}
+function updateHint(i,v){const h=currentProblem.hints||[];if(typeof h[i]==='object')h[i].hint_text=v;else h[i]=v;currentProblem.hints=h;}
 function addHint(){const h=currentProblem.hints||[];h.push({hint_text:'',hint_order:h.length});currentProblem.hints=h;renderEditor();}
 function removeHint(i){const h=currentProblem.hints||[];h.splice(i,1);currentProblem.hints=h;renderEditor();}
 
@@ -417,13 +470,36 @@ function updateSubHint(sk,i,v){const s=currentProblem.subproblems[sk];const h=s.
 function addSubHint(sk){const s=currentProblem.subproblems[sk];const h=s.hints||[];h.push({hint_text:'',hint_order:h.length});s.hints=h;renderEditor();}
 function removeSubHint(sk,i){const s=currentProblem.subproblems[sk];const h=s.hints||[];h.splice(i,1);s.hints=h;renderEditor();}
 
+// ── Solutions helpers (S1, S2... list) ──
+function renderSolutionsList(solutions, updateFn, addFn, removeFn){
+  const arr = solutions || [];
+  return `<div class="sol-list">
+    ${arr.map((s,i)=>`<div class="sol-item">
+      <span class="sol-num">S${i+1}</span>
+      <textarea class="fc" rows="5" oninput="${updateFn}(${i},this.value)">${esc(typeof s==='object'?s.text||'':s)}</textarea>
+      <button class="btn btn-del" onclick="${removeFn}(${i})" style="flex-shrink:0;padding:5px 8px">✕</button>
+    </div>`).join('')}
+  </div>
+  <button class="btn btn-add-sol" style="margin-top:5px" onclick="${addFn}()">+ Add Solution</button>`;
+}
+
+// Main problem solutions
+function updateSolution(i,v){const s=currentProblem.solutions||[];if(typeof s[i]==='object')s[i].text=v;else s[i]={text:v,images:[]};currentProblem.solutions=s;dPrev();}
+function addSolution(){const s=currentProblem.solutions||[];s.push({text:'',images:[]});currentProblem.solutions=s;renderEditor();}
+function removeSolution(i){const s=currentProblem.solutions||[];s.splice(i,1);currentProblem.solutions=s;renderEditor();}
+
+// Sub solutions
+function updateSubSolution(sk,i,v){const sub=currentProblem.subproblems[sk];const s=sub.solutions||[];if(typeof s[i]==='object')s[i].text=v;else s[i]={text:v,images:[]};sub.solutions=s;dPrev();}
+function addSubSolution(sk){const sub=currentProblem.subproblems[sk];const s=sub.solutions||[];s.push({text:'',images:[]});sub.solutions=s;renderEditor();}
+function removeSubSolution(sk,i){const sub=currentProblem.subproblems[sk];const s=sub.solutions||[];s.splice(i,1);sub.solutions=s;renderEditor();}
+
 // ── Subproblem helpers ──
 function getSubKeys(){return Object.keys(currentProblem.subproblems||{}).sort();}
 function addSubproblem(){
   if(!currentProblem.subproblems)currentProblem.subproblems={};
   const existing=getSubKeys();
-  const next=String.fromCharCode(97+existing.length); // a,b,c...
-  currentProblem.subproblems[next]={problem_text:'',correct_answer:'',hint:'',hints:[],comment:'',solution:{text:'',images:[]},images:[]};
+  const next=String.fromCharCode(97+existing.length);
+  currentProblem.subproblems[next]={problem_text:'',correct_answer:'',hints:[],solutions:[],comment:'',images:[]};
   currentSubKey=next;
   renderEditor();
 }
@@ -438,11 +514,6 @@ function selectSubTab(sk){currentSubKey=sk;renderSubEditor();}
 function patchSub(sk,field,val){
   if(!currentProblem.subproblems[sk])return;
   currentProblem.subproblems[sk][field]=val;
-}
-function patchSubSol(sk,val){
-  if(!currentProblem.subproblems[sk])return;
-  if(!currentProblem.subproblems[sk].solution)currentProblem.subproblems[sk].solution={text:'',images:[]};
-  currentProblem.subproblems[sk].solution.text=val;
 }
 
 // ── Render editor ──
@@ -460,8 +531,8 @@ function renderEditor(){
   <div class="sec">Content</div>
   <div class="fg"><label class="lbl">Problem Text (LaTeX)</label><textarea class="fc" rows="5" oninput="currentProblem.problem_text=this.value;dPrev()">${esc(p.problem_text||'')}</textarea></div>
   <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="3" oninput="currentProblem.correct_answer=this.value">${esc(p.correct_answer||'')}</textarea></div>
-  <div class="fg"><label class="lbl">Solution (LaTeX)</label><textarea class="fc" rows="7" oninput="currentProblem.solution=currentProblem.solution||{text:'',images:[]};currentProblem.solution.text=this.value;dPrev()">${esc(getSolText(p))}</textarea></div>
-  <div class="fg"><label class="lbl">Hint</label><textarea class="fc" rows="2" oninput="currentProblem.hint=this.value">${esc(p.hint||'')}</textarea></div>
+
+  <div class="fg"><label class="lbl">Solutions</label>${renderSolutionsList(p.solutions,'updateSolution','addSolution','removeSolution')}</div>
   <div class="fg"><label class="lbl">Hints</label>${renderHintsList(p.hints,'updateHint','addHint','removeHint')}</div>
   <div class="fg"><label class="lbl">Comment</label><textarea class="fc" rows="2" oninput="currentProblem.comment=this.value">${esc(p.comment||'')}</textarea></div>
   <div class="fg"><label class="lbl">Keyword</label><textarea class="fc" rows="2" oninput="currentProblem.keyword=this.value">${esc(p.keyword||'')}</textarea></div>
@@ -504,11 +575,10 @@ function renderSubEditorContent(sk){
   const s=(currentProblem.subproblems||{})[sk]||{};
   return `<div class="sub-content">
     <div class="sub-del-row"><button class="btn btn-del" onclick="deleteSubproblem('${sk}')">Delete ${sk.toUpperCase()}</button></div>
-    <div class="fg"><label class="lbl">Problem Text</label><textarea class="fc" rows="4" id="sub-pt-${sk}" oninput="patchSub('${sk}','problem_text',this.value);dPrev()">${esc(s.problem_text||'')}</textarea></div>
+    <div class="fg"><label class="lbl">Problem Text</label><textarea class="fc" rows="4" oninput="patchSub('${sk}','problem_text',this.value);dPrev()">${esc(s.problem_text||'')}</textarea></div>
     <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','correct_answer',this.value)">${esc(s.correct_answer||'')}</textarea></div>
-    <div class="fg"><label class="lbl">Solution (LaTeX)</label><textarea class="fc" rows="6" oninput="patchSubSol('${sk}',this.value);dPrev()">${esc(s.solution&&s.solution.text?s.solution.text:'')}</textarea></div>
-    <div class="fg"><label class="lbl">Hint</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','hint',this.value)">${esc(s.hint||'')}</textarea></div>
-    <div class="fg"><label class="lbl">Hints</label>${renderHintsList(s.hints,`updateSubHint.bind(null,'${sk}')`,`addSubHint.bind(null,'${sk}')`,`removeSubHint.bind(null,'${sk}')`)}</div>
+    <div class="fg"><label class="lbl">Solutions</label>${renderSolutionsList(s.solutions||[],"updateSubSolution.bind(null,'${sk}')","addSubSolution.bind(null,'${sk}')","removeSubSolution.bind(null,'${sk}')")}</div>
+    <div class="fg"><label class="lbl">Hints</label>${renderHintsList(s.hints||[],"updateSubHint.bind(null,'${sk}')","addSubHint.bind(null,'${sk}')","removeSubHint.bind(null,'${sk}')")}</div>
     <div class="fg"><label class="lbl">Comment</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','comment',this.value)">${esc(s.comment||'')}</textarea></div>
   </div>`;
 }
@@ -520,13 +590,31 @@ function renderSubEditor(){
   document.getElementById('sub-editor-area').innerHTML=currentSubKey&&currentProblem.subproblems[currentSubKey]?renderSubEditorContent(currentSubKey):'<div style="color:#555;font-size:12px;padding:8px">Select a subproblem.</div>';
 }
 
-function getSolText(p){return p&&p.solution&&p.solution.text?p.solution.text:'';}
-
 // ── Save ──
 async function saveProblem(){
   const btn=document.getElementById('save-btn');
   const st=document.getElementById('save-st');
   btn.disabled=true;btn.textContent='⏳ Saving…';st.className='';st.textContent='';
+
+  // Sync solution (singular) from solutions[0] for backward compat
+  const sols=currentProblem.solutions||[];
+  currentProblem.solution = sols.length>0 ? {text:sols[0].text||'',images:sols[0].images||[]} : {text:'',images:[]};
+
+  // Sync hint (singular) from hints[0] for backward compat
+  const hnts=currentProblem.hints||[];
+  currentProblem.hint = hnts.length>0 ? (typeof hnts[0]==='object'?hnts[0].hint_text||'':hnts[0]) : '';
+
+  // Sync subproblem solution/hint fields
+  if(currentProblem.subproblems){
+    Object.keys(currentProblem.subproblems).forEach(sk=>{
+      const sub=currentProblem.subproblems[sk];
+      const ss=sub.solutions||[];
+      sub.solution = ss.length>0 ? {text:ss[0].text||'',images:ss[0].images||[]} : {text:'',images:[]};
+      const sh=sub.hints||[];
+      sub.hint = sh.length>0 ? (typeof sh[0]==='object'?sh[0].hint_text||'':sh[0]) : '';
+    });
+  }
+
   const row={...currentProblem,updated_at:new Date().toISOString().replace('T',' ').slice(0,19)};
   const {error}=await db.from('problems').upsert(row,{onConflict:'id'});
   btn.disabled=false;btn.innerHTML='💾 Save to Database';
@@ -548,8 +636,10 @@ let prevSubKey=null;
 function renderPreview(){
   const p=currentProblem;
   const subKeys=getSubKeys();
-  if(!prevSubKey&&subKeys.length)prevSubKey=null;
   const panel=document.getElementById('preview-panel');
+  const sols=p.solutions||[];
+  const hnts=p.hints||[];
+
   panel.innerHTML=`
   <div class="prev-title">${escH(p.problem_name||p.id)}</div>
 
@@ -558,7 +648,22 @@ function renderPreview(){
     <div class="prev-box">${renderLatex(p.problem_text)||'<span style="color:#555">No text</span>'}</div>
   </div>
   ${p.correct_answer?`<div class="prev-sec"><div class="prev-lbl">Answer</div><div class="prev-box">${renderLatex(p.correct_answer)}</div></div>`:''}
-  ${getSolText(p)?`<div class="prev-sec"><div class="prev-lbl">Solution</div><div class="prev-box sol">${renderLatex(getSolText(p))}</div></div>`:''}
+
+  ${sols.length?`<div class="prev-sec">
+    <div class="prev-lbl">Solution${sols.length>1?'s':''}</div>
+    ${sols.map((s,i)=>`
+      ${sols.length>1?`<div class="prev-sol-num">S${i+1}</div>`:''}
+      <div class="prev-box sol" style="margin-bottom:${i<sols.length-1?'8px':'0'}">${renderLatex(typeof s==='object'?s.text||'':s)||'<span style="color:#555">—</span>'}</div>
+    `).join('')}
+  </div>`:''}
+
+  ${hnts.length?`<div class="prev-sec">
+    <div class="prev-lbl">Hint${hnts.length>1?'s':''}</div>
+    ${hnts.map((h,i)=>`
+      ${hnts.length>1?`<div class="prev-hint-num">H${i+1}</div>`:''}
+      <div class="prev-box hint-box" style="margin-bottom:${i<hnts.length-1?'4px':'0'}">${renderLatex(typeof h==='object'?h.hint_text||'':h)}</div>
+    `).join('')}
+  </div>`:''}
 
   <div class="prev-sec">
     <div class="prev-lbl">Metadata</div>
@@ -568,7 +673,7 @@ function renderPreview(){
       <div class="prev-cell"><div class="prev-k">Version</div><div class="prev-v">${p.version||'—'}</div></div>
       <div class="prev-cell"><div class="prev-k">Included</div><div class="prev-v">${p.included?'✓ Yes':'✗ No'}</div></div>
       <div class="prev-cell"><div class="prev-k">Free / Recent</div><div class="prev-v">${p.is_free?'Free':'Paid'} · ${p.is_recent?'Recent':'—'}</div></div>
-      <div class="prev-cell"><div class="prev-k">Subproblems</div><div class="prev-v">${subKeys.length?subKeys.map(k=>k.toUpperCase()).join(', '):'—'}</div></div>
+      <div class="prev-cell"><div class="prev-k">Solutions / Hints</div><div class="prev-v">${sols.length} sol · ${hnts.length} hint</div></div>
     </div>
   </div>
 
@@ -584,7 +689,7 @@ function renderPreview(){
   <div class="prev-sec">
     <div class="prev-lbl">Subproblems</div>
     <div class="prev-sub-tabs">${subKeys.map(k=>`<div class="prev-sub-tab${prevSubKey===k?' active':''}" onclick="setPrevSub('${k}')">${k.toUpperCase()}</div>`).join('')}</div>
-    <div id="sub-prev">${prevSubKey&&currentProblem.subproblems[prevSubKey]?renderSubPreview(prevSubKey):renderSubPreview(subKeys[0])}</div>
+    <div id="sub-prev">${renderSubPreview(prevSubKey&&currentProblem.subproblems[prevSubKey]?prevSubKey:subKeys[0])}</div>
   </div>`:''}
 
   ${p.comment?`<div class="prev-sec"><div class="prev-lbl">Comment</div><div class="prev-box" style="color:#aaa;font-size:12px">${renderLatex(p.comment)}</div></div>`:''}
@@ -595,17 +700,31 @@ function renderPreview(){
 
 function renderSubPreview(sk){
   const s=(currentProblem.subproblems||{})[sk]||{};
+  const ssols=s.solutions||[];
+  const shnts=s.hints||[];
   return `<div class="sub-content">
     ${s.problem_text?`<div class="prev-sec"><div class="prev-lbl">${sk.toUpperCase()}: Problem</div><div class="prev-box">${renderLatex(s.problem_text)}</div></div>`:''}
     ${s.correct_answer?`<div class="prev-sec"><div class="prev-lbl">Answer</div><div class="prev-box">${renderLatex(s.correct_answer)}</div></div>`:''}
-    ${s.solution&&s.solution.text?`<div class="prev-sec"><div class="prev-lbl">Solution</div><div class="prev-box sol">${renderLatex(s.solution.text)}</div></div>`:''}
-    ${s.hint?`<div class="prev-sec"><div class="prev-lbl">Hint</div><div class="prev-box">${renderLatex(s.hint)}</div></div>`:''}
-    ${(s.hints||[]).length?`<div class="prev-sec"><div class="prev-lbl">Hints</div>${(s.hints||[]).map((h,i)=>`<div class="prev-box" style="margin-bottom:4px;font-size:12px"><b>H${i+1}:</b> ${renderLatex(typeof h==='object'?h.hint_text||'':h)}</div>`).join('')}</div>`:''}
+    ${ssols.length?`<div class="prev-sec">
+      <div class="prev-lbl">Solution${ssols.length>1?'s':''}</div>
+      ${ssols.map((sv,i)=>`${ssols.length>1?`<div class="prev-sol-num">S${i+1}</div>`:''}
+        <div class="prev-box sol" style="margin-bottom:${i<ssols.length-1?'6px':'0'}">${renderLatex(typeof sv==='object'?sv.text||'':sv)||'<span style="color:#555">—</span>'}</div>`).join('')}
+    </div>`:''}
+    ${shnts.length?`<div class="prev-sec">
+      <div class="prev-lbl">Hint${shnts.length>1?'s':''}</div>
+      ${shnts.map((h,i)=>`${shnts.length>1?`<div class="prev-hint-num">H${i+1}</div>`:''}
+        <div class="prev-box hint-box" style="margin-bottom:${i<shnts.length-1?'4px':'0'}">${renderLatex(typeof h==='object'?h.hint_text||'':h)}</div>`).join('')}
+    </div>`:''}
     ${s.comment?`<div class="prev-sec"><div class="prev-lbl">Comment</div><div class="prev-box" style="color:#aaa;font-size:12px">${renderLatex(s.comment)}</div></div>`:''}
   </div>`;
 }
 
-function setPrevSub(sk){prevSubKey=sk;document.querySelectorAll('.prev-sub-tab').forEach(el=>el.classList.toggle('active',el.textContent.trim().toLowerCase()===sk));document.getElementById('sub-prev').innerHTML=renderSubPreview(sk);if(window.MathJax&&window.MathJax.typesetPromise)window.MathJax.typesetPromise([document.getElementById('sub-prev')]).catch(()=>{});}
+function setPrevSub(sk){
+  prevSubKey=sk;
+  document.querySelectorAll('.prev-sub-tab').forEach(el=>el.classList.toggle('active',el.textContent.trim().toLowerCase()===sk));
+  const el=document.getElementById('sub-prev');
+  if(el){el.innerHTML=renderSubPreview(sk);if(window.MathJax&&window.MathJax.typesetPromise)window.MathJax.typesetPromise([el]).catch(()=>{});}
+}
 
 function tagPrev(label,arr,cls){if(!arr||!arr.length)return '';return `<div class="prev-sec"><div class="prev-lbl">${label}</div><div class="prev-tags">${arr.map(v=>`<span class="tag ${cls}">${v}</span>`).join('')}</div></div>`;}
 

@@ -469,6 +469,10 @@ function removeHint(i){const h=currentProblem.hints||[];h.splice(i,1);currentPro
 function updateSubHint(sk,i,v){const s=currentProblem.subproblems[sk];const h=s.hints||[];if(typeof h[i]==='object')h[i].hint_text=v;else h[i]=v;s.hints=h;}
 function addSubHint(sk){const s=currentProblem.subproblems[sk];const h=s.hints||[];h.push({hint_text:'',hint_order:h.length});s.hints=h;renderEditor();}
 function removeSubHint(sk,i){const s=currentProblem.subproblems[sk];const h=s.hints||[];h.splice(i,1);s.hints=h;renderEditor();}
+// Current-subkey wrappers (used in inline HTML to avoid bind)
+function addCurSubHint(){if(currentSubKey)addSubHint(currentSubKey);}
+function removeCurSubHint(i){if(currentSubKey)removeSubHint(currentSubKey,i);}
+function updateCurSubHint(i,v){if(currentSubKey)updateSubHint(currentSubKey,i,v);}
 
 // ── Solutions helpers (S1, S2... list) ──
 function renderSolutionsList(solutions, updateFn, addFn, removeFn){
@@ -492,6 +496,10 @@ function removeSolution(i){const s=currentProblem.solutions||[];s.splice(i,1);cu
 function updateSubSolution(sk,i,v){const sub=currentProblem.subproblems[sk];const s=sub.solutions||[];if(typeof s[i]==='object')s[i].text=v;else s[i]={text:v,images:[]};sub.solutions=s;dPrev();}
 function addSubSolution(sk){const sub=currentProblem.subproblems[sk];const s=sub.solutions||[];s.push({text:'',images:[]});sub.solutions=s;renderEditor();}
 function removeSubSolution(sk,i){const sub=currentProblem.subproblems[sk];const s=sub.solutions||[];s.splice(i,1);sub.solutions=s;renderEditor();}
+// Current-subkey wrappers (used in inline HTML to avoid bind)
+function addCurSubSolution(){if(currentSubKey)addSubSolution(currentSubKey);}
+function removeCurSubSolution(i){if(currentSubKey)removeSubSolution(currentSubKey,i);}
+function updateCurSubSolution(i,v){if(currentSubKey)updateSubSolution(currentSubKey,i,v);}
 
 // ── Subproblem helpers ──
 function getSubKeys(){return Object.keys(currentProblem.subproblems||{}).sort();}
@@ -577,8 +585,8 @@ function renderSubEditorContent(sk){
     <div class="sub-del-row"><button class="btn btn-del" onclick="deleteSubproblem('${sk}')">Delete ${sk.toUpperCase()}</button></div>
     <div class="fg"><label class="lbl">Problem Text</label><textarea class="fc" rows="4" oninput="patchSub('${sk}','problem_text',this.value);dPrev()">${esc(s.problem_text||'')}</textarea></div>
     <div class="fg"><label class="lbl">Correct Answer</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','correct_answer',this.value)">${esc(s.correct_answer||'')}</textarea></div>
-    <div class="fg"><label class="lbl">Solutions</label>${renderSolutionsList(s.solutions||[],"updateSubSolution.bind(null,'${sk}')","addSubSolution.bind(null,'${sk}')","removeSubSolution.bind(null,'${sk}')")}</div>
-    <div class="fg"><label class="lbl">Hints</label>${renderHintsList(s.hints||[],"updateSubHint.bind(null,'${sk}')","addSubHint.bind(null,'${sk}')","removeSubHint.bind(null,'${sk}')")}</div>
+    <div class="fg"><label class="lbl">Solutions</label>${renderSolutionsList(s.solutions||[],'updateCurSubSolution','addCurSubSolution','removeCurSubSolution')}</div>
+    <div class="fg"><label class="lbl">Hints</label>${renderHintsList(s.hints||[],'updateCurSubHint','addCurSubHint','removeCurSubHint')}</div>
     <div class="fg"><label class="lbl">Comment</label><textarea class="fc" rows="2" oninput="patchSub('${sk}','comment',this.value)">${esc(s.comment||'')}</textarea></div>
   </div>`;
 }

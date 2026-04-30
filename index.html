@@ -358,6 +358,11 @@ function migrateSolutions(p){
 }
 
 function selectProblem(p){
+  // Flush any in-progress edits from the previous problem back into allProblems
+  if(currentProblem){
+    const idx=allProblems.findIndex(q=>q.id===currentProblem.id);
+    if(idx>=0) allProblems[idx]=JSON.parse(JSON.stringify(currentProblem));
+  }
   currentProblem=JSON.parse(JSON.stringify(p));
   migrateHints(currentProblem);
   migrateSolutions(currentProblem);

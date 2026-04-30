@@ -834,14 +834,19 @@ function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function buildSaveRow(p){
   const clone=JSON.parse(JSON.stringify(p));
   const sols=clone.solutions||[];
-  clone.solution=sols.length>0?{text:sols[0].text||'',images:sols[0].images||[]}:{text:'',images:[]};
+  // Only overwrite solution (singular) if solutions[] has content; otherwise keep existing
+  if(sols.length>0){
+    clone.solution={text:sols[0].text||'',images:sols[0].images||[]};
+  }
   const hnts=clone.hints||[];
   clone.hint=hnts.length>0?(typeof hnts[0]==='object'?hnts[0].hint_text||'':hnts[0]):'';
   if(clone.subproblems){
     Object.keys(clone.subproblems).forEach(sk=>{
       const sub=clone.subproblems[sk];
       const ss=sub.solutions||[];
-      sub.solution=ss.length>0?{text:ss[0].text||'',images:ss[0].images||[]}:{text:'',images:[]};
+      if(ss.length>0){
+        sub.solution={text:ss[0].text||'',images:ss[0].images||[]};
+      }
       const sh=sub.hints||[];
       sub.hint=sh.length>0?(typeof sh[0]==='object'?sh[0].hint_text||'':sh[0]):'';
     });
@@ -853,45 +858,59 @@ function buildSaveRow(p){
 async function saveAll(){
   const btn=document.getElementById('save-all-btn');
   btn.disabled=true;
-
-  // Sync any unsaved edits from currentProblem back into allProblems
-  if(currentProblem){
-    const sols=currentProblem.solutions||[];
-    currentProblem.solution=sols.length>0?{text:sols[0].text||'',images:sols[0].images||[]}:{text:'',images:[]};
-    const hnts=currentProblem.hints||[];
-    currentProblem.hint=hnts.length>0?(typeof hnts[0]==='object'?hnts[0].hint_text||'':hnts[0]):'';
-    if(currentProblem.subproblems){
-      Object.keys(currentProblem.subproblems).forEach(sk=>{
-        const sub=currentProblem.subproblems[sk];
-        const ss=sub.solutions||[];
-        sub.solution=ss.length>0?{text:ss[0].text||'',images:ss[0].images||[]}:{text:'',images:[]};
-        const sh=sub.hints||[];
-        sub.hint=sh.length>0?(typeof sh[0]==='object'?sh[0].hint_text||'':sh[0]):'';
-      });
+  try {
+    // Sync any unsaved edits from currentProblem back into allProblems
+    if(currentProblem){
+      const sols=currentProblem.solutions||[];
+      if(sols.length>0) currentProblem.solution={text:sols[0].text||'',images:sols[0].images||[]};
+      const hnts=currentProblem.hints||[];
+      currentProblem.hint=hnts.length>0?(typeof hnts[0]==='object'?hnts[0].hint_text||'':hnts[0]):'';
+      if(currentProblem.subproblems){
+        Object.keys(currentProblem.subproblems).forEach(sk=>{
+          const sub=currentProblem.subproblems[sk];
+          const ss=sub.solutions||[];
+          if(ss.length>0) sub.solution={text:ss[0].text||'',images:ss[0].images||[]};
+          const sh=sub.hints||[];
+          sub.hint=sh.length>0?(typeof sh[0]==='object'?sh[0].hint_text||'':sh[0]):'';
+        });
+      }
+      const idx=allProblems.findIndex(p=>p.id===currentProblem.id);
+      if(idx>=0) allProblems[idx]=JSON.parse(JSON.stringify(currentProblem));
+      else allProblems.push(JSON.parse(JSON.stringify(currentProblem)));
     }
-    const idx=allProblems.findIndex(p=>p.id===currentProblem.id);
-    if(idx>=0) allProblems[idx]=JSON.parse(JSON.stringify(currentProblem));
-    else allProblems.push(JSON.parse(JSON.stringify(currentProblem)));
-  }
 
-  const rows=allProblems.map(buildSaveRow);
-  const BATCH=50;
-  let done=0,errMsgs=[];
-  for(let i=0;i<rows.length;i+=BATCH){
-    btn.textContent=`⏳ ${done}/${rows.length}`;
-    const {error}=await db.from('problems').upsert(rows.slice(i,i+BATCH),{onConflict:'id'});
-    if(error) errMsgs.push(`Batch ${Math.floor(i/BATCH)+1}: ${error.message}`);
-    done=Math.min(done+BATCH,rows.length);
-  }
-  btn.disabled=false;
-  if(errMsgs.length){
-    btn.textContent='⚠ Errors';
-    alert('Save All errors:\n'+errMsgs.join('\n'));
+    const rows=allProblems.map(buildSaveRow);
+    console.log(`[SaveAll] Saving ${rows.length} problems`);
+    const BATCH=20;
+    let done=0,errMsgs=[];
+    for(let i=0;i<rows.length;i+=BATCH){
+      btn.textContent=`⏳ ${done}/${rows.length}`;
+      const batch=rows.slice(i,i+BATCH);
+      const {data,error}=await db.from('problems').upsert(batch,{onConflict:'id'});
+      if(error){
+        console.error(`[SaveAll] Batch ${Math.floor(i/BATCH)+1} error:`,error);
+        errMsgs.push(`Batch ${Math.floor(i/BATCH)+1}: ${error.message}`);
+      } else {
+        console.log(`[SaveAll] Batch ${Math.floor(i/BATCH)+1} OK (${data?.length??batch.length} rows)`);
+      }
+      done=Math.min(done+BATCH,rows.length);
+    }
+    btn.disabled=false;
+    if(errMsgs.length){
+      btn.textContent='⚠ Errors';
+      alert('Save All errors:\n'+errMsgs.join('\n'));
+      setTimeout(()=>{btn.textContent='💾 Save All';},4000);
+    } else {
+      btn.textContent=`✓ Saved ${rows.length}`;
+      renderList();
+      setTimeout(()=>{btn.textContent='💾 Save All';},3000);
+    }
+  } catch(e){
+    console.error('[SaveAll] Exception:',e);
+    btn.disabled=false;
+    btn.textContent='⚠ Error';
+    alert('Save All exception: '+e.message);
     setTimeout(()=>{btn.textContent='💾 Save All';},4000);
-  } else {
-    btn.textContent=`✓ Saved ${rows.length}`;
-    renderList();
-    setTimeout(()=>{btn.textContent='💾 Save All';},3000);
   }
 }
 

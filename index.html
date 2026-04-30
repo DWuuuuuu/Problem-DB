@@ -896,12 +896,71 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(ta)ta.addEventListener('input',updateExportCount);
 });
 
+function toV32Problem(p){
+  // Convert solutions[] array → solution.text (string if 1, list if >1)
+  const sols = p.solutions || [];
+  const solTexts = sols.map(s => typeof s === 'object' ? s.text || '' : s);
+  const solutionObj = {
+    text: solTexts.length === 0 ? (p.solution && p.solution.text ? p.solution.text : null)
+        : solTexts.length === 1 ? solTexts[0]
+        : solTexts,
+    images: (p.solution && p.solution.images) || []
+  };
+  // Build in v32 key order, omitting the DB-only 'solutions' plural field
+  return {
+    id:               p.id,
+    doc_id:           p.doc_id,
+    problem_name:     p.problem_name,
+    problem_text:     p.problem_text,
+    subproblems:      p.subproblems || {},
+    correct_answer:   p.correct_answer,
+    hint:             p.hint || null,
+    hints:            p.hints || [],
+    solution:         solutionObj,
+    images:           p.images || [],
+    difficulty:       p.difficulty,
+    topics:           p.topics || [],
+    quant_topics:     p.quant_topics || [],
+    four_week_topics: p.four_week_topics || [],
+    math_approach:    p.math_approach || [],
+    reasoning_type:   p.reasoning_type || [],
+    problem_labels:   p.problem_labels || [],
+    comment:          p.comment || null,
+    importance:       p.importance,
+    keyword:          p.keyword || null,
+    company_labels:   p.company_labels || [],
+    location_labels:  p.location_labels || [],
+    is_free:          p.is_free || false,
+    is_recent:        p.is_recent || false,
+    updated_at:       p.updated_at,
+    version:          p.version,
+    included:         p.included !== false
+  };
+}
+
 function exportJSON(){
   const raw=document.getElementById('export-ids').value;
   const ids=raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
   const selected=ids.length?allProblems.filter(p=>ids.includes(p.id)):allProblems;
   if(!selected.length){alert('No matching problems found.');return;}
-  const payload={problems:selected.map(p=>JSON.parse(JSON.stringify(p)))};
+
+  // Build document block from first problem's doc_id
+  const firstDocId = selected[0].doc_id || 'export';
+  const document_meta = {
+    id:             firstDocId,
+    school:         firstDocId.split('_qdsi')[0].replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
+    course:         null,
+    problem_type:   'qdsi',
+    term:           null,
+    year:           null,
+    total_problems: selected.length,
+    created_at:     new Date().toISOString()
+  };
+
+  const payload = {
+    document: document_meta,
+    problems: selected.map(p => toV32Problem(JSON.parse(JSON.stringify(p))))
+  };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');

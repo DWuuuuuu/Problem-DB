@@ -313,7 +313,7 @@ function renderList(){
     el.className='problem-item'+(currentProblem&&currentProblem.id===p.id?' active':'');
     el.dataset.id=p.id;
     el.innerHTML=`<div class="p-name">${p.problem_name||p.id}</div><div class="p-meta"><span class="badge badge-${p.difficulty||'null'}">${p.difficulty||'—'}</span><span class="badge ${p.included?'badge-in':'badge-ex'}">${p.included?'✓':'✗'}</span><span style="color:#555;font-size:10px">${(p.company_labels||[]).join(', ')}</span></div>`;
-    el.onclick=()=>selectProblem(p);
+    el.onclick=()=>selectProblem(allProblems.find(q=>q.id===el.dataset.id)||p);
     list.appendChild(el);
   });
   document.getElementById('s-count').textContent=`${filtered.length} / ${allProblems.length}`;

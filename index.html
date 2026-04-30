@@ -163,9 +163,37 @@ select.fc{cursor:pointer;}
 .spinner{width:18px;height:18px;border:2px solid #0f3460;border-top-color:#e94560;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{display:flex;align-items:center;justify-content:center;height:260px;color:#555;font-size:13px;}
+
+/* Export / Save-All modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:8000;display:flex;align-items:center;justify-content:center;}
+.modal-box{background:#16213e;border:1px solid #0f3460;border-radius:12px;padding:28px 32px;width:520px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.modal-box h3{font-size:16px;font-weight:700;color:#e94560;margin-bottom:6px;}
+.modal-box p{font-size:12px;color:#9aa0b4;margin-bottom:14px;}
+.modal-box textarea{width:100%;padding:10px 12px;background:#0f3460;border:1px solid #1a4a8a;border-radius:6px;color:#e0e0e0;font-size:12px;font-family:'Courier New',monospace;resize:vertical;min-height:100px;}
+.modal-box textarea:focus{outline:none;border-color:#e94560;}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;align-items:center;}
+.modal-info{font-size:12px;color:#9aa0b4;margin-right:auto;}
+.btn-export{background:#0f3460;color:#64b4ff;border:1px solid rgba(100,180,255,.3);}
+.btn-export:hover{background:rgba(100,180,255,.15);}
+.save-all-ok{color:#4caf50;font-size:12px;}
 </style>
 </head>
 <body>
+
+<!-- Export JSON modal -->
+<div class="modal-overlay" id="export-modal" style="display:none" onclick="if(event.target===this)closeExportModal()">
+  <div class="modal-box">
+    <h3>⬇ Export Problems to JSON</h3>
+    <p>Enter problem IDs (one per line or comma-separated). Leave blank to export all visible / filtered problems.</p>
+    <textarea id="export-ids" placeholder="e.g.&#10;quant_interview_fundamental_qdsi_p160&#10;quant_interview_fundamental_qdsi_p161&#10;sig_qdsi_p1"></textarea>
+    <div class="modal-foot">
+      <span class="modal-info" id="export-count"></span>
+      <button class="btn btn-ghost" onclick="exportSelectAll()">Select All</button>
+      <button class="btn btn-ghost" onclick="closeExportModal()">Cancel</button>
+      <button class="btn btn-red" onclick="exportJSON()">Export</button>
+    </div>
+  </div>
+</div>
 
 <div id="pw-overlay">
   <div class="pw-box">
@@ -184,6 +212,8 @@ select.fc{cursor:pointer;}
     <div class="topbar-right">
       <button class="btn btn-ghost" onclick="loadProblems()">↺ Refresh</button>
       <button class="btn btn-add" onclick="newProblem()">＋ New Problem</button>
+      <button class="btn btn-export" id="save-all-btn" onclick="saveAll()">💾 Save All</button>
+      <button class="btn btn-ghost" style="color:#64b4ff" onclick="openExportModal()">⬇ Export JSON</button>
       <button class="btn btn-ghost" style="color:#e94560" onclick="logout()">Lock</button>
     </div>
   </div>
@@ -799,6 +829,88 @@ function tagPrev(label,arr,cls){if(!arr||!arr.length)return '';return `<div clas
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── Save All ──
+function buildSaveRow(p){
+  const clone=JSON.parse(JSON.stringify(p));
+  const sols=clone.solutions||[];
+  clone.solution=sols.length>0?{text:sols[0].text||'',images:sols[0].images||[]}:{text:'',images:[]};
+  const hnts=clone.hints||[];
+  clone.hint=hnts.length>0?(typeof hnts[0]==='object'?hnts[0].hint_text||'':hnts[0]):'';
+  if(clone.subproblems){
+    Object.keys(clone.subproblems).forEach(sk=>{
+      const sub=clone.subproblems[sk];
+      const ss=sub.solutions||[];
+      sub.solution=ss.length>0?{text:ss[0].text||'',images:ss[0].images||[]}:{text:'',images:[]};
+      const sh=sub.hints||[];
+      sub.hint=sh.length>0?(typeof sh[0]==='object'?sh[0].hint_text||'':sh[0]):'';
+    });
+  }
+  clone.updated_at=new Date().toISOString().replace('T',' ').slice(0,19);
+  return clone;
+}
+
+async function saveAll(){
+  const btn=document.getElementById('save-all-btn');
+  btn.disabled=true;
+  const rows=allProblems.map(buildSaveRow);
+  const BATCH=50;
+  let done=0,errors=0;
+  for(let i=0;i<rows.length;i+=BATCH){
+    btn.textContent=`⏳ ${done}/${rows.length}`;
+    const {error}=await db.from('problems').upsert(rows.slice(i,i+BATCH),{onConflict:'id'});
+    if(error)errors++;
+    done=Math.min(done+BATCH,rows.length);
+  }
+  btn.disabled=false;
+  if(errors){
+    btn.textContent='⚠ Partial errors';
+    setTimeout(()=>{btn.textContent='💾 Save All';},4000);
+  } else {
+    btn.textContent=`✓ Saved ${rows.length}`;
+    setTimeout(()=>{btn.textContent='💾 Save All';},3000);
+  }
+}
+
+// ── Export JSON ──
+function openExportModal(){
+  document.getElementById('export-modal').style.display='flex';
+  updateExportCount();
+}
+function closeExportModal(){document.getElementById('export-modal').style.display='none';}
+
+function exportSelectAll(){
+  document.getElementById('export-ids').value=allProblems.map(p=>p.id).join('\n');
+  updateExportCount();
+}
+
+function updateExportCount(){
+  const raw=document.getElementById('export-ids').value;
+  const ids=raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  const count=ids.length?allProblems.filter(p=>ids.includes(p.id)).length:allProblems.length;
+  document.getElementById('export-count').textContent=`${count} problem${count!==1?'s':''}`;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('export-ids');
+  if(ta)ta.addEventListener('input',updateExportCount);
+});
+
+function exportJSON(){
+  const raw=document.getElementById('export-ids').value;
+  const ids=raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  const selected=ids.length?allProblems.filter(p=>ids.includes(p.id)):allProblems;
+  if(!selected.length){alert('No matching problems found.');return;}
+  const payload={problems:selected.map(p=>JSON.parse(JSON.stringify(p)))};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`quant_export_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  closeExportModal();
+}
 </script>
 </body>
 </html>

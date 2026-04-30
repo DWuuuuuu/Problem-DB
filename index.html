@@ -853,21 +853,44 @@ function buildSaveRow(p){
 async function saveAll(){
   const btn=document.getElementById('save-all-btn');
   btn.disabled=true;
+
+  // Sync any unsaved edits from currentProblem back into allProblems
+  if(currentProblem){
+    const sols=currentProblem.solutions||[];
+    currentProblem.solution=sols.length>0?{text:sols[0].text||'',images:sols[0].images||[]}:{text:'',images:[]};
+    const hnts=currentProblem.hints||[];
+    currentProblem.hint=hnts.length>0?(typeof hnts[0]==='object'?hnts[0].hint_text||'':hnts[0]):'';
+    if(currentProblem.subproblems){
+      Object.keys(currentProblem.subproblems).forEach(sk=>{
+        const sub=currentProblem.subproblems[sk];
+        const ss=sub.solutions||[];
+        sub.solution=ss.length>0?{text:ss[0].text||'',images:ss[0].images||[]}:{text:'',images:[]};
+        const sh=sub.hints||[];
+        sub.hint=sh.length>0?(typeof sh[0]==='object'?sh[0].hint_text||'':sh[0]):'';
+      });
+    }
+    const idx=allProblems.findIndex(p=>p.id===currentProblem.id);
+    if(idx>=0) allProblems[idx]=JSON.parse(JSON.stringify(currentProblem));
+    else allProblems.push(JSON.parse(JSON.stringify(currentProblem)));
+  }
+
   const rows=allProblems.map(buildSaveRow);
   const BATCH=50;
-  let done=0,errors=0;
+  let done=0,errMsgs=[];
   for(let i=0;i<rows.length;i+=BATCH){
     btn.textContent=`⏳ ${done}/${rows.length}`;
     const {error}=await db.from('problems').upsert(rows.slice(i,i+BATCH),{onConflict:'id'});
-    if(error)errors++;
+    if(error) errMsgs.push(`Batch ${Math.floor(i/BATCH)+1}: ${error.message}`);
     done=Math.min(done+BATCH,rows.length);
   }
   btn.disabled=false;
-  if(errors){
-    btn.textContent='⚠ Partial errors';
+  if(errMsgs.length){
+    btn.textContent='⚠ Errors';
+    alert('Save All errors:\n'+errMsgs.join('\n'));
     setTimeout(()=>{btn.textContent='💾 Save All';},4000);
   } else {
     btn.textContent=`✓ Saved ${rows.length}`;
+    renderList();
     setTimeout(()=>{btn.textContent='💾 Save All';},3000);
   }
 }
@@ -896,27 +919,45 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(ta)ta.addEventListener('input',updateExportCount);
 });
 
-function toV32Problem(p){
-  // Convert solutions[] array → solution.text (string if 1, list if >1)
-  const sols = p.solutions || [];
-  const solTexts = sols.map(s => typeof s === 'object' ? s.text || '' : s);
-  const solutionObj = {
-    text: solTexts.length === 0 ? (p.solution && p.solution.text ? p.solution.text : null)
-        : solTexts.length === 1 ? solTexts[0]
-        : solTexts,
-    images: (p.solution && p.solution.images) || []
+function solsToText(solutions, fallbackSolution){
+  const arr = solutions || [];
+  const texts = arr.map(s => typeof s === 'object' ? s.text || '' : s).filter(t => t);
+  if(texts.length === 0){
+    const fb = fallbackSolution && fallbackSolution.text ? fallbackSolution.text : null;
+    return {text: fb, images: (fallbackSolution && fallbackSolution.images) || []};
+  }
+  return {
+    text: texts.length === 1 ? texts[0] : texts,
+    images: (fallbackSolution && fallbackSolution.images) || []
   };
+}
+
+function toV32Problem(p){
+  // Transform subproblems: remove solutions[] array, convert to solution.text (string or list)
+  const subs = {};
+  Object.entries(p.subproblems || {}).forEach(([k, s]) => {
+    subs[k] = {
+      problem_text:   s.problem_text || null,
+      correct_answer: s.correct_answer || null,
+      hints:          s.hints || [],
+      hint:           s.hint || null,
+      solution:       solsToText(s.solutions, s.solution),
+      images:         s.images || [],
+      comment:        s.comment || null
+    };
+  });
+
   // Build in v32 key order, omitting the DB-only 'solutions' plural field
   return {
     id:               p.id,
     doc_id:           p.doc_id,
     problem_name:     p.problem_name,
     problem_text:     p.problem_text,
-    subproblems:      p.subproblems || {},
+    subproblems:      subs,
     correct_answer:   p.correct_answer,
     hint:             p.hint || null,
     hints:            p.hints || [],
-    solution:         solutionObj,
+    solution:         solsToText(p.solutions, p.solution),
     images:           p.images || [],
     difficulty:       p.difficulty,
     topics:           p.topics || [],
